@@ -20,29 +20,29 @@ const HeroSection = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              Bangladesh's Own Learning Platform
+              বাংলাদেশের নিজস্ব শিক্ষা প্ল্যাটফর্ম
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
-              Learn Skills That
-              <span className="block text-gradient">Shape Your Future</span>
+              দক্ষতা শিখুন যা
+              <span className="block text-gradient">ভবিষ্যৎ গড়বে</span>
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-              Join thousands of Bangladeshi students mastering new skills. Access quality courses, expert instructors, and flexible learning – all at affordable prices.
+              হাজার হাজার বাংলাদেশি শিক্ষার্থীর সাথে নতুন দক্ষতা অর্জন করুন। মানসম্মত কোর্স, বিশেষজ্ঞ প্রশিক্ষক এবং নমনীয় শিক্ষা - সবকিছু সাশ্রয়ী মূল্যে।
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/register">
                 <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                  Join as Student
+                  শিক্ষার্থী হিসেবে যোগ দিন
                   <ArrowRight className="ml-1 h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/courses">
                 <Button variant="hero-outline" size="xl" className="w-full sm:w-auto">
                   <Play className="mr-1 h-5 w-5" />
-                  Browse Courses
+                  কোর্স দেখুন
                 </Button>
               </Link>
             </div>
@@ -54,8 +54,8 @@ const HeroSection = () => {
                   <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">5,000+</p>
-                  <p className="text-sm text-muted-foreground">Active Students</p>
+                  <p className="text-2xl font-bold text-foreground">৫,০০০+</p>
+                  <p className="text-sm text-muted-foreground">সক্রিয় শিক্ষার্থী</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -63,8 +63,8 @@ const HeroSection = () => {
                   <BookOpen className="h-6 w-6 text-accent" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">50+</p>
-                  <p className="text-sm text-muted-foreground">Quality Courses</p>
+                  <p className="text-2xl font-bold text-foreground">৫০+</p>
+                  <p className="text-sm text-muted-foreground">মানসম্মত কোর্স</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -72,8 +72,8 @@ const HeroSection = () => {
                   <Award className="h-6 w-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">95%</p>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                  <p className="text-2xl font-bold text-foreground">৯৫%</p>
+                  <p className="text-sm text-muted-foreground">সাফল্যের হার</p>
                 </div>
               </div>
             </div>
@@ -85,7 +85,7 @@ const HeroSection = () => {
               <div className="rounded-2xl overflow-hidden shadow-2xl border border-border/50">
                 <img
                   src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop"
-                  alt="Students learning together"
+                  alt="শিক্ষার্থীরা একসাথে শিখছে"
                   className="w-full h-auto object-cover"
                 />
               </div>
@@ -97,8 +97,8 @@ const HeroSection = () => {
                     <Award className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Certificate Ready</p>
-                    <p className="text-xs text-muted-foreground">Get certified on completion</p>
+                    <p className="text-sm font-semibold text-foreground">সার্টিফিকেট প্রস্তুত</p>
+                    <p className="text-xs text-muted-foreground">সম্পন্ন করলেই সার্টিফিকেট</p>
                   </div>
                 </div>
               </div>
@@ -109,8 +109,8 @@ const HeroSection = () => {
                     <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Lifetime Access</p>
-                    <p className="text-xs text-muted-foreground">Learn at your own pace</p>
+                    <p className="text-sm font-semibold text-foreground">আজীবন এক্সেস</p>
+                    <p className="text-xs text-muted-foreground">নিজের গতিতে শিখুন</p>
                   </div>
                 </div>
               </div>

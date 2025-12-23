@@ -15,7 +15,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'Inter',
+  				'Hind Siliguri',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
@@ -24,7 +24,7 @@ export default {
   				'Roboto',
   				'Helvetica Neue',
   				'Arial',
-  				'Noto Sans',
+  				'Noto Sans Bengali',
   				'sans-serif'
   			],
   			serif: [

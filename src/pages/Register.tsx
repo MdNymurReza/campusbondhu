@@ -28,8 +28,8 @@ const Register = () => {
     
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Passwords don't match",
-        description: "Please make sure both passwords are the same.",
+        title: "পাসওয়ার্ড মিলছে না",
+        description: "অনুগ্রহ করে নিশ্চিত করুন দুটি পাসওয়ার্ড একই।",
         variant: "destructive",
       });
       return;
@@ -40,8 +40,8 @@ const Register = () => {
     // TODO: Implement actual registration
     setTimeout(() => {
       toast({
-        title: "Registration feature coming soon!",
-        description: "Backend authentication will be enabled shortly.",
+        title: "রেজিস্ট্রেশন ফিচার শীঘ্রই আসছে!",
+        description: "ব্যাকএন্ড অথেন্টিকেশন শীঘ্রই সক্রিয় করা হবে।",
       });
       setIsLoading(false);
     }, 1000);
@@ -50,8 +50,8 @@ const Register = () => {
   return (
     <>
       <Helmet>
-        <title>Register - CampusBondhu</title>
-        <meta name="description" content="Create your free CampusBondhu account and start learning today." />
+        <title>রেজিস্টার - ক্যাম্পাসবন্ধু</title>
+        <meta name="description" content="বিনামূল্যে ক্যাম্পাসবন্ধু অ্যাকাউন্ট খুলুন এবং আজই শেখা শুরু করুন।" />
       </Helmet>
 
       <div className="min-h-screen flex">
@@ -61,26 +61,26 @@ const Register = () => {
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="max-w-md text-center text-primary-foreground space-y-6">
               <GraduationCap className="h-16 w-16 mx-auto" />
-              <h2 className="text-4xl font-bold">Join CampusBondhu</h2>
+              <h2 className="text-4xl font-bold">ক্যাম্পাসবন্ধুতে যোগ দিন</h2>
               <p className="text-lg text-primary-foreground/80">
-                Start your learning journey with thousands of Bangladeshi students. Access quality courses at affordable prices.
+                হাজার হাজার বাংলাদেশি শিক্ষার্থীর সাথে আপনার শেখার যাত্রা শুরু করুন। সাশ্রয়ী মূল্যে মানসম্মত কোর্সে এক্সেস পান।
               </p>
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">5K+</p>
-                  <p className="text-sm text-primary-foreground/70">Students</p>
+                  <p className="text-3xl font-bold">৫K+</p>
+                  <p className="text-sm text-primary-foreground/70">শিক্ষার্থী</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">50+</p>
-                  <p className="text-sm text-primary-foreground/70">Courses</p>
+                  <p className="text-3xl font-bold">৫০+</p>
+                  <p className="text-sm text-primary-foreground/70">কোর্স</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">20+</p>
-                  <p className="text-sm text-primary-foreground/70">Instructors</p>
+                  <p className="text-3xl font-bold">২০+</p>
+                  <p className="text-sm text-primary-foreground/70">প্রশিক্ষক</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">95%</p>
-                  <p className="text-sm text-primary-foreground/70">Success</p>
+                  <p className="text-3xl font-bold">৯৫%</p>
+                  <p className="text-sm text-primary-foreground/70">সাফল্য</p>
                 </div>
               </div>
             </div>
@@ -96,29 +96,29 @@ const Register = () => {
                 <BookOpen className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-2xl font-bold text-foreground">
-                Campus<span className="text-primary">Bondhu</span>
+                ক্যাম্পাস<span className="text-primary">বন্ধু</span>
               </span>
             </Link>
 
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">Create Account</h1>
+              <h1 className="text-3xl font-bold text-foreground">অ্যাকাউন্ট তৈরি করুন</h1>
               <p className="mt-2 text-muted-foreground">
-                Join as a student and start learning today
+                শিক্ষার্থী হিসেবে যোগ দিন এবং আজই শেখা শুরু করুন
               </p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">পূর্ণ নাম</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     id="name"
                     name="name"
                     type="text"
-                    placeholder="Your full name"
+                    placeholder="আপনার পূর্ণ নাম"
                     value={formData.name}
                     onChange={handleChange}
                     className="pl-10 h-12"
@@ -128,7 +128,7 @@ const Register = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">ইমেইল ঠিকানা</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
@@ -145,7 +145,7 @@ const Register = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">পাসওয়ার্ড</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
@@ -170,7 +170,7 @@ const Register = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">পাসওয়ার্ড নিশ্চিত করুন</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
@@ -195,10 +195,10 @@ const Register = () => {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  "Creating account..."
+                  "অ্যাকাউন্ট তৈরি হচ্ছে..."
                 ) : (
                   <>
-                    Create Account
+                    অ্যাকাউন্ট তৈরি করুন
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </>
                 )}
@@ -206,21 +206,22 @@ const Register = () => {
             </form>
 
             <p className="text-center text-muted-foreground">
-              Already have an account?{" "}
+              ইতিমধ্যে অ্যাকাউন্ট আছে?{" "}
               <Link to="/login" className="text-primary font-medium hover:underline">
-                Login here
+                এখানে লগইন করুন
               </Link>
             </p>
 
             <p className="text-center text-xs text-muted-foreground">
-              By creating an account, you agree to our{" "}
+              অ্যাকাউন্ট তৈরি করে আপনি আমাদের{" "}
               <Link to="/terms" className="text-primary hover:underline">
-                Terms of Service
+                সেবার শর্তাবলী
               </Link>{" "}
-              and{" "}
+              এবং{" "}
               <Link to="/privacy" className="text-primary hover:underline">
-                Privacy Policy
-              </Link>
+                গোপনীয়তা নীতিতে
+              </Link>{" "}
+              সম্মত হচ্ছেন
             </p>
           </div>
         </div>

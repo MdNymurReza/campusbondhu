@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 const benefits = [
-  "Access to 50+ quality courses",
-  "Learn from expert instructors",
-  "Get certified upon completion",
-  "Pay easily via bKash, Nagad, Rocket",
-  "Lifetime access to purchased courses",
+  "৫০+ মানসম্মত কোর্সে এক্সেস",
+  "বিশেষজ্ঞ প্রশিক্ষকদের কাছ থেকে শিখুন",
+  "সম্পন্ন করলেই সার্টিফিকেট",
+  "বিকাশ, নগদ, রকেটে সহজ পেমেন্ট",
+  "কেনা কোর্সে আজীবন এক্সেস",
 ];
 
 const CTASection = () => {
@@ -22,10 +22,10 @@ const CTASection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
-            Ready to Start Your Learning Journey?
+            আপনার শেখার যাত্রা শুরু করতে প্রস্তুত?
           </h2>
           <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-            Join thousands of students already learning on CampusBondhu. Start with a free account and explore our courses today.
+            হাজার হাজার শিক্ষার্থী ইতিমধ্যে ক্যাম্পাসবন্ধুতে শিখছে। আজই বিনামূল্যে অ্যাকাউন্ট খুলুন এবং কোর্সগুলো দেখুন।
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 mb-10">
@@ -46,7 +46,7 @@ const CTASection = () => {
                 size="xl"
                 className="bg-background text-foreground hover:bg-background/90 shadow-xl hover:-translate-y-1 transition-all"
               >
-                Create Free Account
+                বিনামূল্যে অ্যাকাউন্ট খুলুন
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -56,7 +56,7 @@ const CTASection = () => {
                 size="xl"
                 className="border-2 border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary"
               >
-                Explore Courses
+                কোর্স দেখুন
               </Button>
             </Link>
           </div>

@@ -10,102 +10,102 @@ import { Search, Clock, Users, Star, Filter } from "lucide-react";
 const allCourses = [
   {
     id: 1,
-    title: "Complete Web Development Bootcamp",
-    instructor: "Rahim Ahmed",
+    title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
+    instructor: "রহিম আহমেদ",
     price: 1999,
     originalPrice: 4999,
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop",
-    category: "Web Development",
-    duration: "40 hours",
+    category: "ওয়েব ডেভেলপমেন্ট",
+    duration: "৪০ ঘণ্টা",
     students: 1250,
     rating: 4.8,
-    description: "Learn HTML, CSS, JavaScript, React, Node.js and more from scratch.",
+    description: "শুরু থেকে HTML, CSS, JavaScript, React, Node.js এবং আরও অনেক কিছু শিখুন।",
   },
   {
     id: 2,
-    title: "Data Science with Python",
-    instructor: "Fatima Khan",
+    title: "পাইথনে ডাটা সায়েন্স",
+    instructor: "ফাতিমা খান",
     price: 2499,
     originalPrice: 5999,
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop",
-    category: "Data Science",
-    duration: "35 hours",
+    category: "ডাটা সায়েন্স",
+    duration: "৩৫ ঘণ্টা",
     students: 890,
     rating: 4.9,
-    description: "Master data analysis, visualization, and machine learning with Python.",
+    description: "পাইথন দিয়ে ডাটা এনালাইসিস, ভিজুয়ালাইজেশন এবং মেশিন লার্নিং আয়ত্ত করুন।",
   },
   {
     id: 3,
-    title: "Digital Marketing Masterclass",
-    instructor: "Karim Hassan",
+    title: "ডিজিটাল মার্কেটিং মাস্টারক্লাস",
+    instructor: "করিম হাসান",
     price: 1499,
     originalPrice: 3999,
     image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop",
-    category: "Marketing",
-    duration: "25 hours",
+    category: "মার্কেটিং",
+    duration: "২৫ ঘণ্টা",
     students: 2100,
     rating: 4.7,
-    description: "Complete guide to SEO, social media, content marketing, and PPC.",
+    description: "SEO, সোশ্যাল মিডিয়া, কন্টেন্ট মার্কেটিং এবং PPC এর সম্পূর্ণ গাইড।",
   },
   {
     id: 4,
-    title: "English for Professionals",
-    instructor: "Sarah Begum",
+    title: "পেশাদারদের জন্য ইংরেজি",
+    instructor: "সারা বেগম",
     price: 999,
     originalPrice: 2499,
     image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=400&h=250&fit=crop",
-    category: "Language",
-    duration: "20 hours",
+    category: "ভাষা",
+    duration: "২০ ঘণ্টা",
     students: 3200,
     rating: 4.6,
-    description: "Improve your business English communication skills for the workplace.",
+    description: "কর্মক্ষেত্রে আপনার বিজনেস ইংরেজি যোগাযোগ দক্ষতা উন্নত করুন।",
   },
   {
     id: 5,
-    title: "BCS Preparation Complete Guide",
-    instructor: "Dr. Abdul Karim",
+    title: "বিসিএস প্রস্তুতি সম্পূর্ণ গাইড",
+    instructor: "ড. আব্দুল করিম",
     price: 1799,
     originalPrice: 3999,
     image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop",
-    category: "Exam Prep",
-    duration: "60 hours",
+    category: "পরীক্ষা প্রস্তুতি",
+    duration: "৬০ ঘণ্টা",
     students: 5600,
     rating: 4.9,
-    description: "Complete preparation for BCS preliminary, written, and viva exams.",
+    description: "বিসিএস প্রিলিমিনারি, লিখিত এবং ভাইভা পরীক্ষার সম্পূর্ণ প্রস্তুতি।",
   },
   {
     id: 6,
-    title: "Graphic Design Fundamentals",
-    instructor: "Tahmina Akter",
+    title: "গ্রাফিক ডিজাইন ফান্ডামেন্টালস",
+    instructor: "তাহমিনা আক্তার",
     price: 1299,
     originalPrice: 2999,
     image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=250&fit=crop",
-    category: "Design",
-    duration: "30 hours",
+    category: "ডিজাইন",
+    duration: "৩০ ঘণ্টা",
     students: 1800,
     rating: 4.7,
-    description: "Learn Adobe Photoshop, Illustrator, and UI/UX design principles.",
+    description: "অ্যাডোবি ফটোশপ, ইলাস্ট্রেটর এবং UI/UX ডিজাইন নীতি শিখুন।",
   },
 ];
 
-const categories = ["All", "Web Development", "Data Science", "Marketing", "Language", "Exam Prep", "Design"];
+const categories = ["সব", "ওয়েব ডেভেলপমেন্ট", "ডাটা সায়েন্স", "মার্কেটিং", "ভাষা", "পরীক্ষা প্রস্তুতি", "ডিজাইন"];
 
 const Courses = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("সব");
 
   const filteredCourses = allCourses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
+    const matchesCategory = selectedCategory === "সব" || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
     <>
       <Helmet>
-        <title>All Courses - CampusBondhu</title>
-        <meta name="description" content="Browse all courses available on CampusBondhu. Find the perfect course to boost your skills and career." />
+        <title>সব কোর্স - ক্যাম্পাসবন্ধু</title>
+        <meta name="description" content="ক্যাম্পাসবন্ধুতে উপলব্ধ সব কোর্স দেখুন। আপনার দক্ষতা এবং ক্যারিয়ার উন্নত করতে সঠিক কোর্সটি খুঁজুন।" />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
@@ -116,10 +116,10 @@ const Courses = () => {
             {/* Header */}
             <div className="text-center max-w-2xl mx-auto mb-10">
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Explore Our Courses
+                আমাদের কোর্সসমূহ দেখুন
               </h1>
               <p className="text-muted-foreground text-lg">
-                Find the perfect course to advance your skills and career
+                আপনার দক্ষতা এবং ক্যারিয়ার উন্নত করতে সঠিক কোর্সটি খুঁজুন
               </p>
             </div>
 
@@ -129,7 +129,7 @@ const Courses = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search courses or instructors..."
+                  placeholder="কোর্স বা প্রশিক্ষক খুঁজুন..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 h-12"
@@ -154,7 +154,7 @@ const Courses = () => {
 
             {/* Results Count */}
             <p className="text-muted-foreground mb-6">
-              Showing {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""}
+              {filteredCourses.length}টি কোর্স দেখানো হচ্ছে
             </p>
 
             {/* Courses Grid */}
@@ -183,7 +183,7 @@ const Courses = () => {
                       {course.title}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-2">
-                      by {course.instructor}
+                      প্রশিক্ষক: {course.instructor}
                     </p>
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                       {course.description}
@@ -214,7 +214,7 @@ const Courses = () => {
                         </span>
                       </div>
                       <span className="px-2 py-1 rounded bg-success/10 text-success text-xs font-medium">
-                        {Math.round((1 - course.price / course.originalPrice) * 100)}% OFF
+                        {Math.round((1 - course.price / course.originalPrice) * 100)}% ছাড়
                       </span>
                     </div>
                   </div>
@@ -224,9 +224,9 @@ const Courses = () => {
 
             {filteredCourses.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">No courses found matching your criteria.</p>
-                <Button variant="outline" className="mt-4" onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}>
-                  Clear Filters
+                <p className="text-muted-foreground text-lg">আপনার অনুসন্ধানের সাথে মিলে এমন কোনো কোর্স পাওয়া যায়নি।</p>
+                <Button variant="outline" className="mt-4" onClick={() => { setSearchQuery(""); setSelectedCategory("সব"); }}>
+                  ফিল্টার মুছুন
                 </Button>
               </div>
             )}

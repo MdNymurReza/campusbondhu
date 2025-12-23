@@ -8,10 +8,10 @@ const Navbar = () => {
   const location = useLocation();
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/courses", label: "Courses" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
+    { href: "/", label: "হোম" },
+    { href: "/courses", label: "কোর্সসমূহ" },
+    { href: "/about", label: "আমাদের সম্পর্কে" },
+    { href: "/contact", label: "যোগাযোগ" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -26,7 +26,7 @@ const Navbar = () => {
               <BookOpen className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
-              Campus<span className="text-primary">Bondhu</span>
+              ক্যাম্পাস<span className="text-primary">বন্ধু</span>
             </span>
           </Link>
 
@@ -51,12 +51,12 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-3">
             <Link to="/login">
               <Button variant="ghost" size="sm">
-                Login
+                লগইন
               </Button>
             </Link>
             <Link to="/register">
               <Button variant="default" size="sm">
-                Join as Student
+                শিক্ষার্থী হিসেবে যোগ দিন
               </Button>
             </Link>
           </div>
@@ -91,12 +91,12 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full">
-                    Login
+                    লগইন
                   </Button>
                 </Link>
                 <Link to="/register" onClick={() => setIsOpen(false)}>
                   <Button variant="default" className="w-full">
-                    Join as Student
+                    শিক্ষার্থী হিসেবে যোগ দিন
                   </Button>
                 </Link>
               </div>
