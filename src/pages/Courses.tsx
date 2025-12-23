@@ -6,6 +6,8 @@ import Footer from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Clock, Users, Star, Filter } from "lucide-react";
+import { supabase } from "@/lib/supabase"
+import { useEffect } from "react"
 
 const allCourses = [
   {
@@ -93,6 +95,7 @@ const categories = ["সব", "ওয়েব ডেভেলপমেন্ট
 const Courses = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("সব");
+  const [courses, setCourses] = useState([])
 
   const filteredCourses = allCourses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,6 +103,11 @@ const Courses = () => {
     const matchesCategory = selectedCategory === "সব" || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+  useEffect(() => {
+    supabase.from("courses").select("*")
+      .then(({ data }) => setCourses(data || []))
+  }, [])
+
 
   return (
     <>
@@ -108,9 +116,15 @@ const Courses = () => {
         <meta name="description" content="ক্যাম্পাসবন্ধুতে উপলব্ধ সব কোর্স দেখুন। আপনার দক্ষতা এবং ক্যারিয়ার উন্নত করতে সঠিক কোর্সটি খুঁজুন।" />
       </Helmet>
 
+      <div>
+        {courses.map((c: any) => (
+          <div key={c.id}>{c.title}</div>
+        ))}
+      </div>
+
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        
+
         <main className="flex-1 py-8">
           <div className="container mx-auto px-4">
             {/* Header */}
@@ -232,6 +246,7 @@ const Courses = () => {
             )}
           </div>
         </main>
+
 
         <Footer />
       </div>
