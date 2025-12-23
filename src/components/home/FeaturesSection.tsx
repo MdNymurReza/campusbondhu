@@ -10,33 +10,33 @@ import {
 const features = [
   {
     icon: GraduationCap,
-    title: "Expert Instructors",
-    description: "Learn from industry professionals and university faculty with years of experience.",
+    title: "বিশেষজ্ঞ প্রশিক্ষক",
+    description: "বছরের পর বছর অভিজ্ঞতাসম্পন্ন ইন্ডাস্ট্রি প্রফেশনাল এবং বিশ্ববিদ্যালয়ের শিক্ষকদের কাছ থেকে শিখুন।",
   },
   {
     icon: Wallet,
-    title: "Affordable Pricing",
-    description: "Quality education at prices designed for Bangladeshi students. Pay via bKash, Nagad, or Rocket.",
+    title: "সাশ্রয়ী মূল্য",
+    description: "বাংলাদেশি শিক্ষার্থীদের জন্য ডিজাইন করা দামে মানসম্মত শিক্ষা। বিকাশ, নগদ বা রকেটে পেমেন্ট করুন।",
   },
   {
     icon: Clock,
-    title: "Flexible Learning",
-    description: "Study on your schedule. Access courses anytime, anywhere with lifetime access.",
+    title: "নমনীয় শিক্ষা",
+    description: "নিজের সময়সূচী অনুযায়ী পড়ুন। যেকোনো সময়, যেকোনো জায়গা থেকে আজীবন এক্সেস করুন।",
   },
   {
     icon: Users,
-    title: "Community Support",
-    description: "Join a community of learners. Get help from peers and instructors.",
+    title: "কমিউনিটি সাপোর্ট",
+    description: "শিক্ষার্থীদের একটি কমিউনিটিতে যোগ দিন। সহপাঠী এবং প্রশিক্ষকদের কাছ থেকে সাহায্য নিন।",
   },
   {
     icon: Shield,
-    title: "Verified Certificates",
-    description: "Earn certificates upon completion to showcase your skills to employers.",
+    title: "যাচাইকৃত সার্টিফিকেট",
+    description: "কোর্স সম্পন্ন করে সার্টিফিকেট অর্জন করুন এবং নিয়োগকর্তাদের কাছে দক্ষতা প্রদর্শন করুন।",
   },
   {
     icon: Smartphone,
-    title: "Mobile Friendly",
-    description: "Learn on any device. Our platform works seamlessly on mobile and desktop.",
+    title: "মোবাইল ফ্রেন্ডলি",
+    description: "যেকোনো ডিভাইসে শিখুন। আমাদের প্ল্যাটফর্ম মোবাইল এবং ডেস্কটপে সমানভাবে কাজ করে।",
   },
 ];
 
@@ -46,13 +46,13 @@ const FeaturesSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            Why Choose Us
+            কেন আমাদের বেছে নেবেন
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Why CampusBondhu?
+            কেন ক্যাম্পাসবন্ধু?
           </h2>
           <p className="text-muted-foreground text-lg">
-            We're built specifically for Bangladeshi students, understanding your needs and challenges.
+            আমরা বাংলাদেশি শিক্ষার্থীদের জন্য বিশেষভাবে তৈরি, আপনাদের প্রয়োজন এবং চ্যালেঞ্জ বুঝে।
           </p>
         </div>
 

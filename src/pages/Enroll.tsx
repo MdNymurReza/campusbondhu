@@ -18,24 +18,24 @@ import { useToast } from "@/hooks/use-toast";
 const paymentMethods = [
   {
     id: "bkash",
-    name: "bKash",
-    number: "01700-000000",
+    name: "বিকাশ",
+    number: "০১৭০০-০০০০০০",
     color: "bg-pink-500",
-    instructions: "Send money to the number above using bKash app",
+    instructions: "উপরের নম্বরে বিকাশ অ্যাপ ব্যবহার করে সেন্ড মানি করুন",
   },
   {
     id: "nagad",
-    name: "Nagad",
-    number: "01800-000000",
+    name: "নগদ",
+    number: "০১৮০০-০০০০০০",
     color: "bg-orange-500",
-    instructions: "Send money to the number above using Nagad app",
+    instructions: "উপরের নম্বরে নগদ অ্যাপ ব্যবহার করে সেন্ড মানি করুন",
   },
   {
     id: "rocket",
-    name: "Rocket",
-    number: "01900-000000",
+    name: "রকেট",
+    number: "০১৯০০-০০০০০০",
     color: "bg-purple-500",
-    instructions: "Send money to the number above using Rocket app",
+    instructions: "উপরের নম্বরে রকেট অ্যাপ ব্যবহার করে সেন্ড মানি করুন",
   },
 ];
 
@@ -50,9 +50,9 @@ const Enroll = () => {
   // Mock course data
   const course = {
     id: Number(id),
-    title: "Complete Web Development Bootcamp",
+    title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
     price: 1999,
-    instructor: "Rahim Ahmed",
+    instructor: "রহিম আহমেদ",
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,8 +66,8 @@ const Enroll = () => {
     
     if (!transactionId.trim()) {
       toast({
-        title: "Transaction ID required",
-        description: "Please enter your transaction ID",
+        title: "ট্রান্সেকশন আইডি প্রয়োজন",
+        description: "অনুগ্রহ করে আপনার ট্রান্সেকশন আইডি লিখুন",
         variant: "destructive",
       });
       return;
@@ -75,8 +75,8 @@ const Enroll = () => {
 
     if (!screenshot) {
       toast({
-        title: "Screenshot required",
-        description: "Please upload your payment screenshot",
+        title: "স্ক্রিনশট প্রয়োজন",
+        description: "অনুগ্রহ করে আপনার পেমেন্ট স্ক্রিনশট আপলোড করুন",
         variant: "destructive",
       });
       return;
@@ -87,8 +87,8 @@ const Enroll = () => {
     // TODO: Implement actual payment submission
     setTimeout(() => {
       toast({
-        title: "Payment submitted!",
-        description: "Your payment is being verified. You'll receive a confirmation email soon.",
+        title: "পেমেন্ট জমা দেওয়া হয়েছে!",
+        description: "আপনার পেমেন্ট যাচাই করা হচ্ছে। অনুমোদন হলে আপনি ইমেইল পাবেন।",
       });
       setIsSubmitting(false);
     }, 1500);
@@ -99,8 +99,8 @@ const Enroll = () => {
   return (
     <>
       <Helmet>
-        <title>Enroll - {course.title} - CampusBondhu</title>
-        <meta name="description" content={`Complete your enrollment for ${course.title}`} />
+        <title>এনরোল - {course.title} - ক্যাম্পাসবন্ধু</title>
+        <meta name="description" content={`${course.title} কোর্সে আপনার এনরোলমেন্ট সম্পন্ন করুন`} />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
@@ -110,22 +110,22 @@ const Enroll = () => {
           <div className="container mx-auto px-4 max-w-4xl">
             <Link to={`/courses/${id}`} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Course
+              কোর্সে ফিরে যান
             </Link>
 
             <div className="grid lg:grid-cols-5 gap-8">
               {/* Payment Form */}
               <div className="lg:col-span-3 space-y-8">
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground mb-2">Complete Your Enrollment</h1>
+                  <h1 className="text-2xl font-bold text-foreground mb-2">আপনার এনরোলমেন্ট সম্পন্ন করুন</h1>
                   <p className="text-muted-foreground">
-                    Follow the payment instructions below to enroll in this course.
+                    এই কোর্সে এনরোল করতে নিচের পেমেন্ট নির্দেশনা অনুসরণ করুন।
                   </p>
                 </div>
 
                 {/* Payment Method Selection */}
                 <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground">Select Payment Method</h2>
+                  <h2 className="text-lg font-semibold text-foreground">পেমেন্ট পদ্ধতি নির্বাচন করুন</h2>
                   <div className="grid grid-cols-3 gap-3">
                     {paymentMethods.map((method) => (
                       <button
@@ -152,15 +152,15 @@ const Enroll = () => {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
                       <div>
-                        <h3 className="font-semibold text-foreground">Payment Instructions</h3>
+                        <h3 className="font-semibold text-foreground">পেমেন্ট নির্দেশনা</h3>
                         <ol className="mt-2 space-y-2 text-sm text-muted-foreground">
-                          <li>1. Open your {selectedPayment.name} app</li>
-                          <li>2. Go to "Send Money"</li>
-                          <li>3. Enter the number: <span className="font-mono font-semibold text-foreground">{selectedPayment.number}</span></li>
-                          <li>4. Amount: <span className="font-semibold text-foreground">৳{course.price}</span></li>
-                          <li>5. Complete the transaction</li>
-                          <li>6. Take a screenshot of the confirmation</li>
-                          <li>7. Fill in the form below with your transaction details</li>
+                          <li>১. আপনার {selectedPayment.name} অ্যাপ খুলুন</li>
+                          <li>২. "সেন্ড মানি" তে যান</li>
+                          <li>৩. এই নম্বর লিখুন: <span className="font-mono font-semibold text-foreground">{selectedPayment.number}</span></li>
+                          <li>৪. পরিমাণ: <span className="font-semibold text-foreground">৳{course.price}</span></li>
+                          <li>৫. লেনদেন সম্পন্ন করুন</li>
+                          <li>৬. কনফার্মেশনের স্ক্রিনশট নিন</li>
+                          <li>৭. নিচে আপনার ট্রান্সেকশন তথ্য দিন</li>
                         </ol>
                       </div>
                     </div>
@@ -170,22 +170,22 @@ const Enroll = () => {
                 {/* Payment Details Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="transactionId">Transaction ID</Label>
+                    <Label htmlFor="transactionId">ট্রান্সেকশন আইডি</Label>
                     <Input
                       id="transactionId"
-                      placeholder="e.g., TXN123456789"
+                      placeholder="যেমন, TXN123456789"
                       value={transactionId}
                       onChange={(e) => setTransactionId(e.target.value)}
                       className="h-12"
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      You'll find this in your payment confirmation message
+                      আপনার পেমেন্ট কনফার্মেশন মেসেজে এটি পাবেন
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="screenshot">Payment Screenshot</Label>
+                    <Label htmlFor="screenshot">পেমেন্ট স্ক্রিনশট</Label>
                     <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
                       <input
                         type="file"
@@ -204,10 +204,10 @@ const Enroll = () => {
                           <div className="space-y-2">
                             <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
                             <p className="text-muted-foreground">
-                              Click to upload your payment screenshot
+                              আপনার পেমেন্ট স্ক্রিনশট আপলোড করতে ক্লিক করুন
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              PNG, JPG up to 5MB
+                              PNG, JPG সর্বোচ্চ 5MB
                             </p>
                           </div>
                         )}
@@ -222,7 +222,7 @@ const Enroll = () => {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Submitting..." : "Submit Payment"}
+                    {isSubmitting ? "জমা দেওয়া হচ্ছে..." : "পেমেন্ট জমা দিন"}
                   </Button>
                 </form>
               </div>
@@ -230,17 +230,17 @@ const Enroll = () => {
               {/* Order Summary */}
               <div className="lg:col-span-2">
                 <div className="bg-card rounded-2xl border border-border p-6 sticky top-24">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Order Summary</h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">অর্ডার সারসংক্ষেপ</h2>
                   
                   <div className="space-y-4">
                     <div>
                       <h3 className="font-medium text-foreground">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground">by {course.instructor}</p>
+                      <p className="text-sm text-muted-foreground">প্রশিক্ষক: {course.instructor}</p>
                     </div>
                     
                     <div className="border-t border-border pt-4">
                       <div className="flex justify-between items-center text-lg">
-                        <span className="font-semibold text-foreground">Total</span>
+                        <span className="font-semibold text-foreground">মোট</span>
                         <span className="font-bold text-foreground">৳{course.price}</span>
                       </div>
                     </div>
@@ -250,9 +250,9 @@ const Enroll = () => {
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-success mt-0.5" />
                       <div className="text-sm">
-                        <p className="font-medium text-foreground">What happens next?</p>
+                        <p className="font-medium text-foreground">এরপর কী হবে?</p>
                         <p className="text-muted-foreground">
-                          After submitting, our team will verify your payment within 24 hours. You'll receive an email confirmation once approved.
+                          জমা দেওয়ার পর, আমাদের টিম ২৪ ঘণ্টার মধ্যে আপনার পেমেন্ট যাচাই করবে। অনুমোদন হলে আপনি ইমেইল পাবেন।
                         </p>
                       </div>
                     </div>

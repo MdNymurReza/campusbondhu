@@ -22,8 +22,8 @@ const Login = () => {
     // TODO: Implement actual authentication
     setTimeout(() => {
       toast({
-        title: "Login feature coming soon!",
-        description: "Backend authentication will be enabled shortly.",
+        title: "লগইন ফিচার শীঘ্রই আসছে!",
+        description: "ব্যাকএন্ড অথেন্টিকেশন শীঘ্রই সক্রিয় করা হবে।",
       });
       setIsLoading(false);
     }, 1000);
@@ -32,8 +32,8 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>Login - CampusBondhu</title>
-        <meta name="description" content="Login to your CampusBondhu account to access your courses and continue learning." />
+        <title>লগইন - ক্যাম্পাসবন্ধু</title>
+        <meta name="description" content="আপনার ক্যাম্পাসবন্ধু অ্যাকাউন্টে লগইন করুন এবং শেখা চালিয়ে যান।" />
       </Helmet>
 
       <div className="min-h-screen flex">
@@ -46,22 +46,22 @@ const Login = () => {
                 <BookOpen className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-2xl font-bold text-foreground">
-                Campus<span className="text-primary">Bondhu</span>
+                ক্যাম্পাস<span className="text-primary">বন্ধু</span>
               </span>
             </Link>
 
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">Welcome Back!</h1>
+              <h1 className="text-3xl font-bold text-foreground">স্বাগতম!</h1>
               <p className="mt-2 text-muted-foreground">
-                Login to continue your learning journey
+                আপনার শেখার যাত্রা চালিয়ে যেতে লগইন করুন
               </p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">ইমেইল ঠিকানা</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
@@ -78,9 +78,9 @@ const Login = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">পাসওয়ার্ড</Label>
                   <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Forgot Password?
+                    পাসওয়ার্ড ভুলে গেছেন?
                   </Link>
                 </div>
                 <div className="relative">
@@ -112,10 +112,10 @@ const Login = () => {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  "Logging in..."
+                  "লগইন হচ্ছে..."
                 ) : (
                   <>
-                    Login
+                    লগইন
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </>
                 )}
@@ -123,18 +123,18 @@ const Login = () => {
             </form>
 
             <p className="text-center text-muted-foreground">
-              Don't have an account?{" "}
+              অ্যাকাউন্ট নেই?{" "}
               <Link to="/register" className="text-primary font-medium hover:underline">
-                Register here
+                এখানে রেজিস্টার করুন
               </Link>
             </p>
 
             {/* Admin Login Link */}
             <div className="pt-4 border-t border-border">
               <p className="text-center text-sm text-muted-foreground">
-                Are you an admin?{" "}
+                আপনি কি অ্যাডমিন?{" "}
                 <Link to="/admin/login" className="text-primary font-medium hover:underline">
-                  Admin Login
+                  অ্যাডমিন লগইন
                 </Link>
               </p>
             </div>
@@ -146,9 +146,9 @@ const Login = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20" />
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="max-w-md text-center text-primary-foreground space-y-6">
-              <h2 className="text-4xl font-bold">Continue Learning</h2>
+              <h2 className="text-4xl font-bold">শেখা চালিয়ে যান</h2>
               <p className="text-lg text-primary-foreground/80">
-                Pick up where you left off. Your courses and progress are waiting for you.
+                যেখানে ছেড়েছিলেন সেখান থেকে শুরু করুন। আপনার কোর্স এবং অগ্রগতি আপনার জন্য অপেক্ষা করছে।
               </p>
               <div className="flex flex-col gap-4 pt-4">
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -156,8 +156,8 @@ const Login = () => {
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold">50+ Courses</p>
-                    <p className="text-sm text-primary-foreground/70">Available to explore</p>
+                    <p className="font-semibold">৫০+ কোর্স</p>
+                    <p className="text-sm text-primary-foreground/70">এক্সপ্লোর করার জন্য</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -165,8 +165,8 @@ const Login = () => {
                     <span className="text-lg font-bold">৳</span>
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold">Easy Payment</p>
-                    <p className="text-sm text-primary-foreground/70">bKash, Nagad, Rocket</p>
+                    <p className="font-semibold">সহজ পেমেন্ট</p>
+                    <p className="text-sm text-primary-foreground/70">বিকাশ, নগদ, রকেট</p>
                   </div>
                 </div>
               </div>

@@ -19,35 +19,35 @@ import {
 const courseData = {
   1: {
     id: 1,
-    title: "Complete Web Development Bootcamp",
-    instructor: "Rahim Ahmed",
-    instructorBio: "Senior Software Engineer with 10+ years of experience at top tech companies.",
+    title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
+    instructor: "রহিম আহমেদ",
+    instructorBio: "শীর্ষ টেক কোম্পানিতে ১০+ বছরের অভিজ্ঞতাসম্পন্ন সিনিয়র সফটওয়্যার ইঞ্জিনিয়ার।",
     price: 1999,
     originalPrice: 4999,
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop",
-    category: "Web Development",
-    duration: "40 hours",
+    category: "ওয়েব ডেভেলপমেন্ট",
+    duration: "৪০ ঘণ্টা",
     students: 1250,
     rating: 4.8,
     reviews: 342,
-    description: "Learn HTML, CSS, JavaScript, React, Node.js and more from scratch. This comprehensive bootcamp will take you from complete beginner to a job-ready web developer.",
-    longDescription: "This course is designed to teach you everything you need to become a professional web developer. You'll start with the basics of HTML and CSS, then move on to JavaScript, React, and backend development with Node.js. By the end of this course, you'll be able to build full-stack web applications from scratch.",
+    description: "শুরু থেকে HTML, CSS, JavaScript, React, Node.js এবং আরও অনেক কিছু শিখুন। এই সম্পূর্ণ বুটক্যাম্প আপনাকে সম্পূর্ণ নতুন থেকে চাকরি-প্রস্তুত ওয়েব ডেভেলপারে রূপান্তরিত করবে।",
+    longDescription: "এই কোর্সটি পেশাদার ওয়েব ডেভেলপার হতে আপনার যা দরকার সবকিছু শেখানোর জন্য ডিজাইন করা হয়েছে। আপনি HTML এবং CSS এর মূল বিষয়গুলো দিয়ে শুরু করবেন, তারপর JavaScript, React এবং Node.js দিয়ে ব্যাকএন্ড ডেভেলপমেন্টে যাবেন। এই কোর্সের শেষে, আপনি শুরু থেকে ফুল-স্ট্যাক ওয়েব অ্যাপ্লিকেশন তৈরি করতে সক্ষম হবেন।",
     whatYouWillLearn: [
-      "Build responsive websites using HTML5 and CSS3",
-      "Master JavaScript ES6+ and modern best practices",
-      "Create dynamic React applications with hooks",
-      "Build RESTful APIs with Node.js and Express",
-      "Work with databases like MongoDB and PostgreSQL",
-      "Deploy applications to cloud platforms",
+      "HTML5 এবং CSS3 ব্যবহার করে রেসপন্সিভ ওয়েবসাইট তৈরি করুন",
+      "JavaScript ES6+ এবং আধুনিক বেস্ট প্র্যাক্টিস আয়ত্ত করুন",
+      "হুকস সহ ডায়নামিক React অ্যাপ্লিকেশন তৈরি করুন",
+      "Node.js এবং Express দিয়ে RESTful API তৈরি করুন",
+      "MongoDB এবং PostgreSQL এর মতো ডাটাবেসে কাজ করুন",
+      "ক্লাউড প্ল্যাটফর্মে অ্যাপ্লিকেশন ডিপ্লয় করুন",
     ],
     curriculum: [
-      { title: "Introduction to Web Development", lessons: 5, duration: "2 hours" },
-      { title: "HTML5 Fundamentals", lessons: 8, duration: "4 hours" },
-      { title: "CSS3 and Responsive Design", lessons: 10, duration: "6 hours" },
-      { title: "JavaScript Essentials", lessons: 15, duration: "10 hours" },
-      { title: "React.js Masterclass", lessons: 12, duration: "8 hours" },
-      { title: "Node.js Backend Development", lessons: 10, duration: "6 hours" },
-      { title: "Final Project", lessons: 5, duration: "4 hours" },
+      { title: "ওয়েব ডেভেলপমেন্টের পরিচিতি", lessons: 5, duration: "২ ঘণ্টা" },
+      { title: "HTML5 ফান্ডামেন্টালস", lessons: 8, duration: "৪ ঘণ্টা" },
+      { title: "CSS3 এবং রেসপন্সিভ ডিজাইন", lessons: 10, duration: "৬ ঘণ্টা" },
+      { title: "JavaScript এসেনশিয়ালস", lessons: 15, duration: "১০ ঘণ্টা" },
+      { title: "React.js মাস্টারক্লাস", lessons: 12, duration: "৮ ঘণ্টা" },
+      { title: "Node.js ব্যাকএন্ড ডেভেলপমেন্ট", lessons: 10, duration: "৬ ঘণ্টা" },
+      { title: "ফাইনাল প্রজেক্ট", lessons: 5, duration: "৪ ঘণ্টা" },
     ],
   },
 };
@@ -62,11 +62,11 @@ const CourseDetail = () => {
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Course not found</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-4">কোর্স পাওয়া যায়নি</h1>
             <Link to="/courses">
               <Button variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Courses
+                কোর্সে ফিরে যান
               </Button>
             </Link>
           </div>
@@ -79,7 +79,7 @@ const CourseDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{course.title} - CampusBondhu</title>
+        <title>{course.title} - ক্যাম্পাসবন্ধু</title>
         <meta name="description" content={course.description} />
       </Helmet>
 
@@ -92,7 +92,7 @@ const CourseDetail = () => {
             <div className="container mx-auto px-4">
               <Link to="/courses" className="inline-flex items-center text-background/70 hover:text-background mb-6 transition-colors">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Courses
+                কোর্সে ফিরে যান
               </Link>
               
               <div className="grid lg:grid-cols-3 gap-8">
@@ -107,11 +107,11 @@ const CourseDetail = () => {
                     <div className="flex items-center gap-1 text-accent">
                       <Star className="h-5 w-5 fill-current" />
                       <span className="font-semibold text-background">{course.rating}</span>
-                      <span>({course.reviews} reviews)</span>
+                      <span>({course.reviews} রিভিউ)</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-5 w-5" />
-                      {course.students} students
+                      {course.students} শিক্ষার্থী
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="h-5 w-5" />
@@ -120,7 +120,7 @@ const CourseDetail = () => {
                   </div>
                   
                   <p className="text-background/70">
-                    Instructor: <span className="text-background font-medium">{course.instructor}</span>
+                    প্রশিক্ষক: <span className="text-background font-medium">{course.instructor}</span>
                   </p>
                 </div>
 
@@ -137,28 +137,28 @@ const CourseDetail = () => {
                         <span className="text-3xl font-bold">৳{course.price}</span>
                         <span className="text-lg text-muted-foreground line-through">৳{course.originalPrice}</span>
                         <span className="px-2 py-1 rounded bg-success/10 text-success text-sm font-medium">
-                          {Math.round((1 - course.price / course.originalPrice) * 100)}% OFF
+                          {Math.round((1 - course.price / course.originalPrice) * 100)}% ছাড়
                         </span>
                       </div>
                       
                       <Link to={`/enroll/${course.id}`}>
                         <Button variant="hero" size="lg" className="w-full">
-                          Enroll Now
+                          এখনই এনরোল করুন
                         </Button>
                       </Link>
                       
                       <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3 text-muted-foreground">
                           <PlayCircle className="h-5 w-5" />
-                          {course.duration} of video content
+                          {course.duration} ভিডিও কন্টেন্ট
                         </div>
                         <div className="flex items-center gap-3 text-muted-foreground">
                           <BookOpen className="h-5 w-5" />
-                          Lifetime access
+                          আজীবন এক্সেস
                         </div>
                         <div className="flex items-center gap-3 text-muted-foreground">
                           <Award className="h-5 w-5" />
-                          Certificate on completion
+                          সম্পন্ন করলেই সার্টিফিকেট
                         </div>
                       </div>
                     </div>
@@ -175,7 +175,7 @@ const CourseDetail = () => {
                 <div className="lg:col-span-2 space-y-12">
                   {/* What You'll Learn */}
                   <div className="bg-card rounded-2xl border border-border p-6">
-                    <h2 className="text-2xl font-bold text-foreground mb-6">What You'll Learn</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">আপনি যা শিখবেন</h2>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {course.whatYouWillLearn.map((item, index) => (
                         <div key={index} className="flex items-start gap-3">
@@ -188,13 +188,13 @@ const CourseDetail = () => {
 
                   {/* About */}
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-4">About This Course</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-4">এই কোর্স সম্পর্কে</h2>
                     <p className="text-muted-foreground leading-relaxed">{course.longDescription}</p>
                   </div>
 
                   {/* Curriculum */}
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Course Curriculum</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">কোর্স কারিকুলাম</h2>
                     <div className="space-y-3">
                       {course.curriculum.map((section, index) => (
                         <div
@@ -208,7 +208,7 @@ const CourseDetail = () => {
                             <div>
                               <h3 className="font-medium text-foreground">{section.title}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {section.lessons} lessons • {section.duration}
+                                {section.lessons}টি লেসন • {section.duration}
                               </p>
                             </div>
                           </div>
@@ -219,7 +219,7 @@ const CourseDetail = () => {
 
                   {/* Instructor */}
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-6">About the Instructor</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">প্রশিক্ষক সম্পর্কে</h2>
                     <div className="flex items-start gap-4">
                       <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-2xl font-bold text-primary">
