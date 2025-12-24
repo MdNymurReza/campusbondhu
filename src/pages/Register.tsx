@@ -1,11 +1,12 @@
+// src/pages/Register.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookOpen, Mail, Lock, User, ArrowRight, Eye, EyeOff, GraduationCap } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { BookOpen, Mail, Lock, User, ArrowRight, Eye, EyeOff, GraduationCap, Github, Chrome } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signUp, signInWithGoogle, signInWithGithub } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,24 +28,31 @@ const Register = () => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "পাসওয়ার্ড মিলছে না",
-        description: "অনুগ্রহ করে নিশ্চিত করুন দুটি পাসওয়ার্ড একই।",
-        variant: "destructive",
-      });
+      alert("পাসওয়ার্ড মিলছে না");
       return;
     }
 
     setIsLoading(true);
 
-    // TODO: Implement actual registration
-    setTimeout(() => {
-      toast({
-        title: "রেজিস্ট্রেশন ফিচার শীঘ্রই আসছে!",
-        description: "ব্যাকএন্ড অথেন্টিকেশন শীঘ্রই সক্রিয় করা হবে।",
-      });
-      setIsLoading(false);
-    }, 1000);
+    const { error } = await signUp(formData.email, formData.password, formData.name);
+    
+    if (!error) {
+      navigate('/login');
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    await signInWithGoogle();
+    setIsLoading(false);
+  };
+
+  const handleGithubLogin = async () => {
+    setIsLoading(true);
+    await signInWithGithub();
+    setIsLoading(false);
   };
 
   return (
@@ -108,6 +116,44 @@ const Register = () => {
               </p>
             </div>
 
+            {/* Social Registration Buttons */}
+            <div className="flex flex-col gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+              >
+                <Chrome className="mr-2 h-5 w-5" />
+                Google দিয়ে রেজিস্টার করুন
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={handleGithubLogin}
+                disabled={isLoading}
+              >
+                <Github className="mr-2 h-5 w-5" />
+                GitHub দিয়ে রেজিস্টার করুন
+              </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  অথবা ইমেইল দিয়ে রেজিস্টার করুন
+                </span>
+              </div>
+            </div>
+
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
@@ -123,6 +169,7 @@ const Register = () => {
                     onChange={handleChange}
                     className="pl-10 h-12"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -140,6 +187,7 @@ const Register = () => {
                     onChange={handleChange}
                     className="pl-10 h-12"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -158,11 +206,13 @@ const Register = () => {
                     className="pl-10 pr-10 h-12"
                     required
                     minLength={6}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -183,6 +233,7 @@ const Register = () => {
                     className="pl-10 h-12"
                     required
                     minLength={6}
+                    disabled={isLoading}
                   />
                 </div>
               </div>

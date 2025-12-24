@@ -1,3 +1,5 @@
+// src/pages/Dashboard.tsx
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
@@ -13,42 +15,70 @@ import {
   Settings,
   LogOut
 } from "lucide-react";
-
-// Mock data
-const enrolledCourses = [
-  {
-    id: 1,
-    title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
-    instructor: "রহিম আহমেদ",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop",
-    progress: 45,
-    status: "approved",
-    lastAccessed: "২ দিন আগে",
-  },
-  {
-    id: 2,
-    title: "পাইথনে ডাটা সায়েন্স",
-    instructor: "ফাতিমা খান",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop",
-    progress: 0,
-    status: "pending",
-    lastAccessed: null,
-  },
-  {
-    id: 3,
-    title: "ডিজিটাল মার্কেটিং মাস্টারক্লাস",
-    instructor: "করিম হাসান",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop",
-    progress: 0,
-    status: "rejected",
-    lastAccessed: null,
-  },
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const Dashboard = () => {
-  const user = {
-    name: "আহমেদ রহমান",
-    email: "ahmed@example.com",
+  const { user, signOut, loading: authLoading } = useAuth();
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchEnrolledCourses();
+    }
+  }, [user, authLoading]);
+
+  const fetchEnrolledCourses = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch user's enrollments
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('enrollments')
+        .select(`
+          *,
+          courses (*)
+        `)
+        .eq('user_id', user.id);
+
+      if (enrollmentsError) throw enrollmentsError;
+
+      // Transform data to match the component's structure
+      const formattedCourses = (enrollments || []).map((enrollment: any) => ({
+        id: enrollment.course_id,
+        title: enrollment.courses?.title || 'Unknown Course',
+        instructor: enrollment.courses?.instructor_name || 'Unknown Instructor',
+        image: enrollment.courses?.image_url || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop',
+        progress: enrollment.progress || 0,
+        status: enrollment.status || 'pending',
+        lastAccessed: enrollment.last_accessed ? new Date(enrollment.last_accessed).toLocaleDateString('bn-BD') : 'কখনও না',
+      }));
+
+      setEnrolledCourses(formattedCourses);
+    } catch (error) {
+      console.error('Error fetching enrolled courses:', error);
+      // Fallback to mock data if API fails
+      setEnrolledCourses([
+        {
+          id: 1,
+          title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
+          instructor: "রহিম আহমেদ",
+          image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop",
+          progress: 45,
+          status: "approved",
+          lastAccessed: "২ দিন আগে",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = "/";
   };
 
   const getStatusBadge = (status: string) => {
@@ -79,6 +109,35 @@ const Dashboard = () => {
     }
   };
 
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size={12} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">লগইন প্রয়োজন</h1>
+            <p className="text-muted-foreground mb-6">এই পৃষ্ঠাটি দেখতে আপনাকে লগইন করতে হবে</p>
+            <Link to="/login">
+              <Button variant="hero">লগইন করুন</Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const userName = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'ব্যবহারকারী';
+  const userEmail = user.email || '';
+
   return (
     <>
       <Helmet>
@@ -99,11 +158,11 @@ const Dashboard = () => {
                   <div className="text-center mb-6 pb-6 border-b border-border">
                     <div className="h-20 w-20 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
                       <span className="text-3xl font-bold text-primary">
-                        {user.name.charAt(0)}
+                        {userName.charAt(0)}
                       </span>
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">{user.name}</h2>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <h2 className="text-lg font-semibold text-foreground">{userName}</h2>
+                    <p className="text-sm text-muted-foreground">{userEmail}</p>
                   </div>
 
                   {/* Navigation */}
@@ -130,6 +189,7 @@ const Dashboard = () => {
                       সেটিংস
                     </Link>
                     <button
+                      onClick={handleSignOut}
                       className="flex items-center gap-3 px-4 py-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors w-full"
                     >
                       <LogOut className="h-5 w-5" />

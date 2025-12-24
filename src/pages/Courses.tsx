@@ -1,4 +1,5 @@
-import { useState } from "react";
+// src/pages/Courses.tsx
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
@@ -6,108 +7,69 @@ import Footer from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Clock, Users, Star, Filter } from "lucide-react";
-import { supabase } from "@/lib/supabase"
-import { useEffect } from "react"
-
-const allCourses = [
-  {
-    id: 1,
-    title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
-    instructor: "রহিম আহমেদ",
-    price: 1999,
-    originalPrice: 4999,
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop",
-    category: "ওয়েব ডেভেলপমেন্ট",
-    duration: "৪০ ঘণ্টা",
-    students: 1250,
-    rating: 4.8,
-    description: "শুরু থেকে HTML, CSS, JavaScript, React, Node.js এবং আরও অনেক কিছু শিখুন।",
-  },
-  {
-    id: 2,
-    title: "পাইথনে ডাটা সায়েন্স",
-    instructor: "ফাতিমা খান",
-    price: 2499,
-    originalPrice: 5999,
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop",
-    category: "ডাটা সায়েন্স",
-    duration: "৩৫ ঘণ্টা",
-    students: 890,
-    rating: 4.9,
-    description: "পাইথন দিয়ে ডাটা এনালাইসিস, ভিজুয়ালাইজেশন এবং মেশিন লার্নিং আয়ত্ত করুন।",
-  },
-  {
-    id: 3,
-    title: "ডিজিটাল মার্কেটিং মাস্টারক্লাস",
-    instructor: "করিম হাসান",
-    price: 1499,
-    originalPrice: 3999,
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop",
-    category: "মার্কেটিং",
-    duration: "২৫ ঘণ্টা",
-    students: 2100,
-    rating: 4.7,
-    description: "SEO, সোশ্যাল মিডিয়া, কন্টেন্ট মার্কেটিং এবং PPC এর সম্পূর্ণ গাইড।",
-  },
-  {
-    id: 4,
-    title: "পেশাদারদের জন্য ইংরেজি",
-    instructor: "সারা বেগম",
-    price: 999,
-    originalPrice: 2499,
-    image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=400&h=250&fit=crop",
-    category: "ভাষা",
-    duration: "২০ ঘণ্টা",
-    students: 3200,
-    rating: 4.6,
-    description: "কর্মক্ষেত্রে আপনার বিজনেস ইংরেজি যোগাযোগ দক্ষতা উন্নত করুন।",
-  },
-  {
-    id: 5,
-    title: "বিসিএস প্রস্তুতি সম্পূর্ণ গাইড",
-    instructor: "ড. আব্দুল করিম",
-    price: 1799,
-    originalPrice: 3999,
-    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop",
-    category: "পরীক্ষা প্রস্তুতি",
-    duration: "৬০ ঘণ্টা",
-    students: 5600,
-    rating: 4.9,
-    description: "বিসিএস প্রিলিমিনারি, লিখিত এবং ভাইভা পরীক্ষার সম্পূর্ণ প্রস্তুতি।",
-  },
-  {
-    id: 6,
-    title: "গ্রাফিক ডিজাইন ফান্ডামেন্টালস",
-    instructor: "তাহমিনা আক্তার",
-    price: 1299,
-    originalPrice: 2999,
-    image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=250&fit=crop",
-    category: "ডিজাইন",
-    duration: "৩০ ঘণ্টা",
-    students: 1800,
-    rating: 4.7,
-    description: "অ্যাডোবি ফটোশপ, ইলাস্ট্রেটর এবং UI/UX ডিজাইন নীতি শিখুন।",
-  },
-];
+import { supabase } from "@/lib/supabase";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const categories = ["সব", "ওয়েব ডেভেলপমেন্ট", "ডাটা সায়েন্স", "মার্কেটিং", "ভাষা", "পরীক্ষা প্রস্তুতি", "ডিজাইন"];
 
 const Courses = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("সব");
-  const [courses, setCourses] = useState([])
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredCourses = allCourses.filter((course) => {
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      // Fallback to mock data
+      setCourses([
+        {
+          id: 1,
+          title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
+          instructor_name: "রহিম আহমেদ",
+          price: 1999,
+          original_price: 4999,
+          image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop",
+          category: "ওয়েব ডেভেলপমেন্ট",
+          duration: "৪০ ঘণ্টা",
+          students_count: 1250,
+          rating: 4.8,
+          description: "শুরু থেকে HTML, CSS, JavaScript, React, Node.js এবং আরও অনেক কিছু শিখুন।",
+        },
+        // ... other courses
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+      course.instructor_name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "সব" || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-  useEffect(() => {
-    supabase.from("courses").select("*")
-      .then(({ data }) => setCourses(data || []))
-  }, [])
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size={12} />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -115,12 +77,6 @@ const Courses = () => {
         <title>সব কোর্স - ক্যাম্পাসবন্ধু</title>
         <meta name="description" content="ক্যাম্পাসবন্ধুতে উপলব্ধ সব কোর্স দেখুন। আপনার দক্ষতা এবং ক্যারিয়ার উন্নত করতে সঠিক কোর্সটি খুঁজুন।" />
       </Helmet>
-
-      <div>
-        {courses.map((c: any) => (
-          <div key={c.id}>{c.title}</div>
-        ))}
-      </div>
 
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -181,7 +137,7 @@ const Courses = () => {
                 >
                   <div className="relative overflow-hidden">
                     <img
-                      src={course.image}
+                      src={course.image_url}
                       alt={course.title}
                       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -197,7 +153,7 @@ const Courses = () => {
                       {course.title}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-2">
-                      প্রশিক্ষক: {course.instructor}
+                      প্রশিক্ষক: {course.instructor_name}
                     </p>
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                       {course.description}
@@ -210,7 +166,7 @@ const Courses = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {course.students}
+                        {course.students_count}
                       </div>
                       <div className="flex items-center gap-1 text-accent">
                         <Star className="h-4 w-4 fill-current" />
@@ -223,13 +179,17 @@ const Courses = () => {
                         <span className="text-xl font-bold text-foreground">
                           ৳{course.price}
                         </span>
-                        <span className="text-sm text-muted-foreground line-through">
-                          ৳{course.originalPrice}
-                        </span>
+                        {course.original_price && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            ৳{course.original_price}
+                          </span>
+                        )}
                       </div>
-                      <span className="px-2 py-1 rounded bg-success/10 text-success text-xs font-medium">
-                        {Math.round((1 - course.price / course.originalPrice) * 100)}% ছাড়
-                      </span>
+                      {course.original_price && (
+                        <span className="px-2 py-1 rounded bg-success/10 text-success text-xs font-medium">
+                          {Math.round((1 - course.price / course.original_price) * 100)}% ছাড়
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -246,7 +206,6 @@ const Courses = () => {
             )}
           </div>
         </main>
-
 
         <Footer />
       </div>

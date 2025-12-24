@@ -1,32 +1,44 @@
+// src/pages/Login.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookOpen, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { BookOpen, Mail, Lock, ArrowRight, Eye, EyeOff, Github, Chrome } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signIn, signInWithGoogle, signInWithGithub } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // TODO: Implement actual authentication
-    setTimeout(() => {
-      toast({
-        title: "লগইন ফিচার শীঘ্রই আসছে!",
-        description: "ব্যাকএন্ড অথেন্টিকেশন শীঘ্রই সক্রিয় করা হবে।",
-      });
-      setIsLoading(false);
-    }, 1000);
+    const { error } = await signIn(email, password);
+    
+    if (!error) {
+      navigate('/dashboard');
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    await signInWithGoogle();
+    setIsLoading(false);
+  };
+
+  const handleGithubLogin = async () => {
+    setIsLoading(true);
+    await signInWithGithub();
+    setIsLoading(false);
   };
 
   return (
@@ -58,6 +70,44 @@ const Login = () => {
               </p>
             </div>
 
+            {/* Social Login Buttons */}
+            <div className="flex flex-col gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+              >
+                <Chrome className="mr-2 h-5 w-5" />
+                Google দিয়ে লগইন করুন
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={handleGithubLogin}
+                disabled={isLoading}
+              >
+                <Github className="mr-2 h-5 w-5" />
+                GitHub দিয়ে লগইন করুন
+              </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  অথবা ইমেইল দিয়ে লগইন করুন
+                </span>
+              </div>
+            </div>
+
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
@@ -72,6 +122,7 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -93,11 +144,13 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10 h-12"
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>

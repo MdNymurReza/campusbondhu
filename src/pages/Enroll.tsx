@@ -1,19 +1,24 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+// src/pages/Enroll.tsx
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  ArrowLeft, 
-  Upload, 
-  CheckCircle2, 
+import {
+  ArrowLeft,
+  Upload,
+  CheckCircle2,
   AlertCircle,
-  Smartphone
+  Smartphone,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentMethods = [
   {
@@ -42,17 +47,42 @@ const paymentMethods = [
 const Enroll = () => {
   const { id } = useParams();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedMethod, setSelectedMethod] = useState("bkash");
   const [transactionId, setTransactionId] = useState("");
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock course data
-  const course = {
-    id: Number(id),
-    title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
-    price: 1999,
-    instructor: "রহিম আহমেদ",
+  useEffect(() => {
+    fetchCourse();
+  }, [id]);
+
+  const fetchCourse = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      setCourse(data);
+    } catch (error) {
+      console.error('Error fetching course:', error);
+      // Fallback to mock data
+      setCourse({
+        id: Number(id),
+        title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
+        price: 1999,
+        instructor_name: "রহিম আহমেদ",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +93,17 @@ const Enroll = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (!user) {
+      toast({
+        title: "লগইন প্রয়োজন",
+        description: "এনরোল করতে অনুগ্রহ করে প্রথমে লগইন করুন",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
     if (!transactionId.trim()) {
       toast({
         title: "ট্রান্সেকশন আইডি প্রয়োজন",
@@ -84,17 +124,87 @@ const Enroll = () => {
 
     setIsSubmitting(true);
 
-    // TODO: Implement actual payment submission
-    setTimeout(() => {
+    try {
+      // Upload screenshot to Supabase Storage
+      const screenshotName = `payment-proofs/${user.id}/${uuidv4()}-${screenshot.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('course-assets')
+        .upload(screenshotName, screenshot);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL for the screenshot
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-assets')
+        .getPublicUrl(screenshotName);
+
+      // Create enrollment record
+      // In your Enroll.tsx handleSubmit function, update the insert section:
+      const { error: enrollmentError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,  // Make sure it's snake_case
+          course_id: id,
+          payment_method: selectedMethod,
+          transaction_id: transactionId,
+          payment_proof_url: publicUrl,
+          amount: course?.price || 0,
+          status: 'pending',
+        } as any); // Temporarily use 'as any' to bypass TypeScript checking
+
+      if (enrollmentError) throw enrollmentError;
+
       toast({
         title: "পেমেন্ট জমা দেওয়া হয়েছে!",
         description: "আপনার পেমেন্ট যাচাই করা হচ্ছে। অনুমোদন হলে আপনি ইমেইল পাবেন।",
       });
+
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Error submitting payment:', error);
+      toast({
+        title: "ত্রুটি হয়েছে",
+        description: error.message || "পেমেন্ট জমা দেওয়ার সময় একটি ত্রুটি হয়েছে",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   const selectedPayment = paymentMethods.find((m) => m.id === selectedMethod);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">কোর্স পাওয়া যায়নি</h1>
+            <Link to="/courses">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                কোর্সে ফিরে যান
+              </Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -105,7 +215,7 @@ const Enroll = () => {
 
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        
+
         <main className="flex-1 py-8">
           <div className="container mx-auto px-4 max-w-4xl">
             <Link to={`/courses/${id}`} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
@@ -130,12 +240,10 @@ const Enroll = () => {
                     {paymentMethods.map((method) => (
                       <button
                         key={method.id}
+                        type="button"
                         onClick={() => setSelectedMethod(method.id)}
-                        className={`p-4 rounded-xl border-2 transition-all ${
-                          selectedMethod === method.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
+                        className={`p-4 rounded-xl border-2 transition-all ${selectedMethod === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                        disabled={isSubmitting}
                       >
                         <div className={`h-10 w-10 rounded-lg ${method.color} mx-auto mb-2 flex items-center justify-center`}>
                           <Smartphone className="h-5 w-5 text-white" />
@@ -178,6 +286,7 @@ const Enroll = () => {
                       onChange={(e) => setTransactionId(e.target.value)}
                       className="h-12"
                       required
+                      disabled={isSubmitting}
                     />
                     <p className="text-xs text-muted-foreground">
                       আপনার পেমেন্ট কনফার্মেশন মেসেজে এটি পাবেন
@@ -193,6 +302,7 @@ const Enroll = () => {
                         accept="image/*"
                         onChange={handleFileChange}
                         className="hidden"
+                        disabled={isSubmitting}
                       />
                       <label htmlFor="screenshot" className="cursor-pointer">
                         {screenshot ? (
@@ -222,7 +332,14 @@ const Enroll = () => {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "জমা দেওয়া হচ্ছে..." : "পেমেন্ট জমা দিন"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        জমা দেওয়া হচ্ছে...
+                      </>
+                    ) : (
+                      "পেমেন্ট জমা দিন"
+                    )}
                   </Button>
                 </form>
               </div>
@@ -231,13 +348,13 @@ const Enroll = () => {
               <div className="lg:col-span-2">
                 <div className="bg-card rounded-2xl border border-border p-6 sticky top-24">
                   <h2 className="text-lg font-semibold text-foreground mb-4">অর্ডার সারসংক্ষেপ</h2>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <h3 className="font-medium text-foreground">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground">প্রশিক্ষক: {course.instructor}</p>
+                      <p className="text-sm text-muted-foreground">প্রশিক্ষক: {course.instructor_name}</p>
                     </div>
-                    
+
                     <div className="border-t border-border pt-4">
                       <div className="flex justify-between items-center text-lg">
                         <span className="font-semibold text-foreground">মোট</span>
