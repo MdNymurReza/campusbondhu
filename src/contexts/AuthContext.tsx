@@ -31,37 +31,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const initAuth = async () => {
+    // Initialize auth state
+    const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          throw error;
+        }
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
       } catch (error) {
-        console.error('Error getting session:', error);
+        console.error('Auth initialization error:', error);
       } finally {
         setLoading(false);
       }
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log('Auth state changed:', event);
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-
-          if (event === 'SIGNED_IN') {
-            navigate('/dashboard');
-          } else if (event === 'SIGNED_OUT') {
-            navigate('/');
-          }
-        }
-      );
-
-      return () => subscription.unsubscribe();
     };
 
-    initAuth();
-  }, [navigate]);
+    getSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setLoading(false);
+
+        // Handle navigation based on auth events
+        switch (event) {
+          case 'SIGNED_IN':
+            toast({
+              title: 'লগইন সফল!',
+              description: 'স্বাগতম!',
+            });
+            navigate('/dashboard');
+            break;
+          case 'SIGNED_OUT':
+            toast({
+              title: 'লগআউট সফল',
+              description: 'সফলভাবে লগআউট হয়েছে।',
+            });
+            navigate('/');
+            break;
+          case 'USER_UPDATED':
+            console.log('User updated:', currentSession?.user);
+            break;
+          case 'TOKEN_REFRESHED':
+            console.log('Token refreshed');
+            break;
+        }
+      }
+    );
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - navigation is handled inside the callback
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
@@ -96,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: 'কনফার্মেশন ইমেইল পাঠানো হয়েছে!',
           description: 'অনুগ্রহ করে আপনার ইমেইল চেক করুন এবং কনফার্মেশন লিংক ক্লিক করুন।',
         });
-        navigate('/auth/confirm?sent=true');
+        navigate('/auth/confirm?sent=true&email=' + encodeURIComponent(email));
       } else {
         // Auto login if email confirmation is disabled
         toast({
@@ -111,13 +141,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Signup error:', error);
       
       // Handle specific errors
-      if (error.message.includes('password')) {
+      if (error.message?.includes('password')) {
         toast({
           title: 'পাসওয়ার্ড দুর্বল',
           description: 'অনুগ্রহ করে একটি শক্তিশালী পাসওয়ার্ড ব্যবহার করুন (অন্তত ৬ অক্ষর)।',
           variant: 'destructive',
         });
-      } else if (error.message.includes('email')) {
+      } else if (error.message?.includes('email')) {
         toast({
           title: 'ইমেইল ভুল',
           description: 'অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা লিখুন।',
@@ -152,22 +182,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           navigate('/auth/confirm?email=' + encodeURIComponent(email));
           return { error };
         }
+        
+        // Check for invalid credentials
+        if (error.message.includes('Invalid login credentials')) {
+          toast({
+            title: 'লগইন ব্যর্থ',
+            description: 'ইমেইল বা পাসওয়ার্ড ভুল।',
+            variant: 'destructive',
+          });
+          return { error };
+        }
+        
         throw error;
       }
 
-      toast({
-        title: 'লগইন সফল!',
-        description: 'স্বাগতম!',
-      });
-
+      // Success - navigation will be handled by onAuthStateChange
       return { error: null };
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: 'লগইন ব্যর্থ',
-        description: error.message || 'ইমেইল বা পাসওয়ার্ড ভুল।',
-        variant: 'destructive',
-      });
+      
+      // Generic error fallback
+      if (!error.message?.includes('Invalid login credentials')) {
+        toast({
+          title: 'লগইন ব্যর্থ',
+          description: error.message || 'একটি ত্রুটি হয়েছে। আবার চেষ্টা করুন।',
+          variant: 'destructive',
+        });
+      }
+      
       return { error };
     }
   };
@@ -177,10 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      toast({
-        title: 'লগআউট সফল',
-        description: 'সফলভাবে লগআউট হয়েছে।',
-      });
+      // Navigation will be handled by onAuthStateChange
     } catch (error: any) {
       toast({
         title: 'লগআউট ব্যর্থ',
@@ -196,6 +235,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
       if (error) throw error;
@@ -326,7 +369,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     loading,
