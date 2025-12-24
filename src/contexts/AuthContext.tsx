@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -31,8 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initialize auth state
-    const getSession = async () => {
+    // Get initial session
+    const initializeAuth = async () => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
@@ -41,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw error;
         }
         
+        console.log('Initial session:', currentSession?.user?.email || 'No user');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
       } catch (error) {
@@ -50,36 +50,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    getSession();
+    initializeAuth();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log('Auth state changed:', event);
+        console.log('Auth event:', event, currentSession?.user?.email || 'No user');
         
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setLoading(false);
 
-        // Handle navigation based on auth events
+        // Handle specific events
         switch (event) {
           case 'SIGNED_IN':
             toast({
               title: 'লগইন সফল!',
               description: 'স্বাগতম!',
             });
-            navigate('/dashboard');
+            // Small delay to ensure state is updated
+            setTimeout(() => navigate('/dashboard'), 100);
             break;
+            
           case 'SIGNED_OUT':
             toast({
               title: 'লগআউট সফল',
               description: 'সফলভাবে লগআউট হয়েছে।',
             });
-            navigate('/');
+            setTimeout(() => navigate('/'), 100);
             break;
+            
           case 'USER_UPDATED':
-            console.log('User updated:', currentSession?.user);
+            console.log('User updated');
             break;
+            
           case 'TOKEN_REFRESHED':
             console.log('Token refreshed');
             break;
@@ -91,10 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array - navigation is handled inside the callback
+  }, [navigate, toast]);
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
+      console.log('📝 Attempting signup for:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -107,59 +113,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
 
+      console.log('📨 Signup response:', {
+        user: data.user?.email,
+        session: data.session ? 'Yes' : 'No',
+        error: error?.message
+      });
+
       if (error) {
-        // Handle specific errors
-        if (error.message.includes('User already registered')) {
-          toast({
-            title: 'ইমেইল ইতিমধ্যে রেজিস্টার্ড',
-            description: 'এই ইমেইলটি ইতিমধ্যে রেজিস্টার্ড আছে। লগইন করুন বা অন্য ইমেইল ব্যবহার করুন।',
-            variant: 'destructive',
-          });
-          return { error };
-        }
-        throw error;
+        // Show error message from Supabase
+        toast({
+          title: 'রেজিস্ট্রেশন ব্যর্থ',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return { error };
       }
 
-      // Check if email confirmation was sent
-      if (data.session === null && data.user) {
+      // Success - check if email confirmation was sent
+      if (data.user && !data.session) {
         toast({
-          title: 'কনফার্মেশন ইমেইল পাঠানো হয়েছে!',
-          description: 'অনুগ্রহ করে আপনার ইমেইল চেক করুন এবং কনফার্মেশন লিংক ক্লিক করুন।',
+          title: 'সফল!',
+          description: 'কনফার্মেশন ইমেইল পাঠানো হয়েছে। আপনার ইমেইল চেক করুন।',
         });
-        navigate('/auth/confirm?sent=true&email=' + encodeURIComponent(email));
-      } else {
-        // Auto login if email confirmation is disabled
+        console.log('📧 Email confirmation should be sent to:', email);
+        
+        // Redirect to confirmation page
+        setTimeout(() => {
+          navigate(`/auth/confirm?email=${encodeURIComponent(email)}&sent=true`);
+        }, 1500);
+        
+      } else if (data.session) {
+        // Auto logged in (email confirmations disabled)
         toast({
           title: 'রেজিস্ট্রেশন সফল!',
           description: 'স্বাগতম! আপনার অ্যাকাউন্ট তৈরি হয়েছে।',
         });
-        navigate('/dashboard');
+        console.log('✅ User auto-logged in (email confirmation disabled)');
       }
 
       return { error: null };
     } catch (error: any) {
-      console.error('Signup error:', error);
-      
-      // Handle specific errors
-      if (error.message?.includes('password')) {
-        toast({
-          title: 'পাসওয়ার্ড দুর্বল',
-          description: 'অনুগ্রহ করে একটি শক্তিশালী পাসওয়ার্ড ব্যবহার করুন (অন্তত ৬ অক্ষর)।',
-          variant: 'destructive',
-        });
-      } else if (error.message?.includes('email')) {
-        toast({
-          title: 'ইমেইল ভুল',
-          description: 'অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা লিখুন।',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'রেজিস্ট্রেশন ব্যর্থ',
-          description: error.message || 'একটি ত্রুটি হয়েছে। আবার চেষ্টা করুন।',
-          variant: 'destructive',
-        });
-      }
+      console.error('❌ Signup error:', error);
+      toast({
+        title: 'ত্রুটি হয়েছে',
+        description: 'একটি অজানা ত্রুটি হয়েছে।',
+        variant: 'destructive',
+      });
       return { error };
     }
   };
@@ -172,18 +171,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        // Check if user needs to confirm email
+        // Check specific errors
         if (error.message.includes('Email not confirmed')) {
           toast({
             title: 'ইমেইল যাচাই প্রয়োজন',
-            description: 'অনুগ্রহ করে আপনার ইমেইল যাচাই করুন। কনফার্মেশন লিংক ইমেইলে পাঠানো হয়েছে।',
+            description: 'অনুগ্রহ করে আপনার ইমেইল যাচাই করুন।',
             variant: 'destructive',
           });
-          navigate('/auth/confirm?email=' + encodeURIComponent(email));
+          navigate(`/auth/confirm?email=${encodeURIComponent(email)}`);
           return { error };
         }
         
-        // Check for invalid credentials
         if (error.message.includes('Invalid login credentials')) {
           toast({
             title: 'লগইন ব্যর্থ',
@@ -193,23 +191,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { error };
         }
         
-        throw error;
-      }
-
-      // Success - navigation will be handled by onAuthStateChange
-      return { error: null };
-    } catch (error: any) {
-      console.error('Login error:', error);
-      
-      // Generic error fallback
-      if (!error.message?.includes('Invalid login credentials')) {
+        // Generic error
         toast({
           title: 'লগইন ব্যর্থ',
-          description: error.message || 'একটি ত্রুটি হয়েছে। আবার চেষ্টা করুন।',
+          description: error.message,
           variant: 'destructive',
         });
+        return { error };
       }
-      
+
+      // Success - toast will be shown by onAuthStateChange
+      console.log('✅ Login successful for:', email);
+      return { error: null };
+    } catch (error: any) {
+      console.error('❌ Login error:', error);
+      toast({
+        title: 'লগইন ব্যর্থ',
+        description: 'একটি ত্রুটি হয়েছে।',
+        variant: 'destructive',
+      });
       return { error };
     }
   };
@@ -218,12 +218,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
-      // Navigation will be handled by onAuthStateChange
+      // Toast will be shown by onAuthStateChange
     } catch (error: any) {
       toast({
         title: 'লগআউট ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
     }
@@ -245,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: 'Google লগইন ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
     }
@@ -263,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: 'GitHub লগইন ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
     }
@@ -286,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: 'পাসওয়ার্ড রিসেট ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
       return { error };
@@ -310,7 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: 'পাসওয়ার্ড আপডেট ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
       return { error };
@@ -334,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: 'প্রোফাইল আপডেট ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
       return { error };
@@ -362,7 +361,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: 'ইমেইল পাঠানো ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        description: error.message,
         variant: 'destructive',
       });
       return { error };

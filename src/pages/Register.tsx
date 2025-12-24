@@ -1,11 +1,10 @@
-// src/pages/Register.tsx
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookOpen, Mail, Lock, User, ArrowRight, Eye, EyeOff, GraduationCap, Github, Chrome } from "lucide-react";
+import { BookOpen, Mail, Lock, User, Eye, EyeOff, GraduationCap, Github, Chrome } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
@@ -18,7 +17,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signUp, signInWithGoogle, signInWithGithub } = useAuth();
-  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,6 +25,7 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Basic validation
     if (formData.password !== formData.confirmPassword) {
       alert("পাসওয়ার্ড মিলছে না");
       return;
@@ -37,10 +36,13 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
+    if (!formData.email.includes('@')) {
+      alert("অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা লিখুন");
+      return;
+    }
 
-    const { error } = await signUp(formData.email, formData.password, formData.name);
-    
+    setIsLoading(true);
+    await signUp(formData.email, formData.password, formData.name);
     setIsLoading(false);
   };
 
@@ -65,33 +67,15 @@ const Register = () => {
 
       <div className="min-h-screen flex">
         {/* Left Panel - Image */}
-        <div className="hidden lg:flex flex-1 relative gradient-primary">
+        <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-blue-600 to-purple-600">
           <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20" />
           <div className="absolute inset-0 flex items-center justify-center p-12">
-            <div className="max-w-md text-center text-primary-foreground space-y-6">
+            <div className="max-w-md text-center text-white space-y-6">
               <GraduationCap className="h-16 w-16 mx-auto" />
               <h2 className="text-4xl font-bold">ক্যাম্পাসবন্ধুতে যোগ দিন</h2>
-              <p className="text-lg text-primary-foreground/80">
-                হাজার হাজার বাংলাদেশি শিক্ষার্থীর সাথে আপনার শেখার যাত্রা শুরু করুন। সাশ্রয়ী মূল্যে মানসম্মত কোর্সে এক্সেস পান।
+              <p className="text-lg text-white/80">
+                হাজার হাজার বাংলাদেশি শিক্ষার্থীর সাথে আপনার শেখার যাত্রা শুরু করুন।
               </p>
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">৫K+</p>
-                  <p className="text-sm text-primary-foreground/70">শিক্ষার্থী</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">৫০+</p>
-                  <p className="text-sm text-primary-foreground/70">কোর্স</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">২০+</p>
-                  <p className="text-sm text-primary-foreground/70">প্রশিক্ষক</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-3xl font-bold">৯৫%</p>
-                  <p className="text-sm text-primary-foreground/70">সাফল্য</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -101,18 +85,18 @@ const Register = () => {
           <div className="w-full max-w-md space-y-8">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 justify-center group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary shadow-md group-hover:shadow-glow transition-shadow">
-                <BookOpen className="h-5 w-5 text-primary-foreground" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-md">
+                <BookOpen className="h-5 w-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-foreground">
-                ক্যাম্পাস<span className="text-primary">বন্ধু</span>
+              <span className="text-2xl font-bold">
+                ক্যাম্পাস<span className="text-blue-600">বন্ধু</span>
               </span>
             </Link>
 
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">অ্যাকাউন্ট তৈরি করুন</h1>
-              <p className="mt-2 text-muted-foreground">
+              <h1 className="text-3xl font-bold">অ্যাকাউন্ট তৈরি করুন</h1>
+              <p className="mt-2 text-gray-600">
                 শিক্ষার্থী হিসেবে যোগ দিন এবং আজই শেখা শুরু করুন
               </p>
             </div>
@@ -146,10 +130,10 @@ const Register = () => {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
+                <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-white px-2 text-gray-500">
                   অথবা ইমেইল দিয়ে রেজিস্টার করুন
                 </span>
               </div>
@@ -160,7 +144,7 @@ const Register = () => {
               <div className="space-y-2">
                 <Label htmlFor="name">পূর্ণ নাম</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="name"
                     name="name"
@@ -178,7 +162,7 @@ const Register = () => {
               <div className="space-y-2">
                 <Label htmlFor="email">ইমেইল ঠিকানা</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="email"
                     name="email"
@@ -196,7 +180,7 @@ const Register = () => {
               <div className="space-y-2">
                 <Label htmlFor="password">পাসওয়ার্ড</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
                     name="password"
@@ -212,13 +196,13 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500">
                   কমপক্ষে ৬ অক্ষরের হতে হবে
                 </p>
               </div>
@@ -226,7 +210,7 @@ const Register = () => {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">পাসওয়ার্ড নিশ্চিত করুন</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -242,47 +226,24 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  রেজিস্ট্রেশন করার পর, আপনাকে একটি কনফার্মেশন ইমেইল পাঠানো হবে। অনুগ্রহ করে আপনার ইমেইল চেক করুন এবং অ্যাকাউন্ট এক্টিভেট করতে লিংক ক্লিক করুন।
-                </p>
-              </div>
-
               <Button
                 type="submit"
-                variant="hero"
-                size="lg"
-                className="w-full"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   "অ্যাকাউন্ট তৈরি হচ্ছে..."
                 ) : (
-                  <>
-                    অ্যাকাউন্ট তৈরি করুন
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
+                  "অ্যাকাউন্ট তৈরি করুন"
                 )}
               </Button>
             </form>
 
-            <p className="text-center text-muted-foreground">
+            <p className="text-center text-gray-600">
               ইতিমধ্যে অ্যাকাউন্ট আছে?{" "}
-              <Link to="/login" className="text-primary font-medium hover:underline">
+              <Link to="/login" className="text-blue-600 font-medium hover:underline">
                 এখানে লগইন করুন
               </Link>
-            </p>
-
-            <p className="text-center text-xs text-muted-foreground">
-              অ্যাকাউন্ট তৈরি করে আপনি আমাদের{" "}
-              <Link to="/terms" className="text-primary hover:underline">
-                সেবার শর্তাবলী
-              </Link>{" "}
-              এবং{" "}
-              <Link to="/privacy" className="text-primary hover:underline">
-                গোপনীয়তা নীতিতে
-              </Link>{" "}
-              সম্মত হচ্ছেন
             </p>
           </div>
         </div>
