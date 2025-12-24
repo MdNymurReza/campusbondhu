@@ -22,10 +22,6 @@ const Login = () => {
 
     const { error } = await signIn(email, password);
     
-    if (!error) {
-      navigate('/dashboard');
-    }
-    
     setIsLoading(false);
   };
 
@@ -181,6 +177,16 @@ const Login = () => {
                 এখানে রেজিস্টার করুন
               </Link>
             </p>
+
+            {/* Email not confirmed notice */}
+            <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
+              <p className="text-sm text-warning-foreground">
+                <strong>ইমেইল যাচাই করেননি?</strong> লগইন করতে সমস্যা হলে কনফার্মেশন ইমেইল চেক করুন অথবা{' '}
+                <Link to="/auth/confirm" className="text-primary hover:underline font-medium">
+                  এখানে ক্লিক করুন
+                </Link>
+              </p>
+            </div>
 
             {/* Admin Login Link */}
             <div className="pt-4 border-t border-border">

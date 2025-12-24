@@ -32,13 +32,14 @@ const Register = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে");
+      return;
+    }
+
     setIsLoading(true);
 
     const { error } = await signUp(formData.email, formData.password, formData.name);
-    
-    if (!error) {
-      navigate('/login');
-    }
     
     setIsLoading(false);
   };
@@ -217,6 +218,9 @@ const Register = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  কমপক্ষে ৬ অক্ষরের হতে হবে
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -236,6 +240,12 @@ const Register = () => {
                     disabled={isLoading}
                   />
                 </div>
+              </div>
+
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  রেজিস্ট্রেশন করার পর, আপনাকে একটি কনফার্মেশন ইমেইল পাঠানো হবে। অনুগ্রহ করে আপনার ইমেইল চেক করুন এবং অ্যাকাউন্ট এক্টিভেট করতে লিংক ক্লিক করুন।
+                </p>
               </div>
 
               <Button

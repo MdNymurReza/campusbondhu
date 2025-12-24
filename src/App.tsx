@@ -20,6 +20,8 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
+import Callback from "./components/auth/Callback";
+import ConfirmEmail from "./components/auth/ConfirmEmail";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -57,6 +59,8 @@ const App = () => (
                 <Route path="/courses/:id" element={<CourseDetail />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/auth/callback" element={<Callback />} />
+                <Route path="/auth/confirm" element={<ConfirmEmail />} />
                 
                 {/* Protected routes */}
                 <Route element={<ProtectedRoute />}>

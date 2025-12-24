@@ -14,7 +14,6 @@ export const AdminRoute = () => {
     );
   }
 
-  // Check if user is admin
   const isAdmin = user?.user_metadata?.role === 'admin' || 
                   user?.email?.includes('admin');
 

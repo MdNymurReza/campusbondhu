@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +18,7 @@ interface AuthContextType {
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
   updateProfile: (updates: any) => Promise<{ error: any }>;
   isAuthenticated: boolean;
+  resendConfirmationEmail: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
@@ -41,9 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
+          console.log('Auth state changed:', event);
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
+
+          if (event === 'SIGNED_IN') {
+            navigate('/dashboard');
+          } else if (event === 'SIGNED_OUT') {
+            navigate('/');
+          }
         }
       );
 
@@ -51,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [navigate]);
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
@@ -63,23 +73,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: name,
             full_name: name,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific errors
+        if (error.message.includes('User already registered')) {
+          toast({
+            title: 'ইমেইল ইতিমধ্যে রেজিস্টার্ড',
+            description: 'এই ইমেইলটি ইতিমধ্যে রেজিস্টার্ড আছে। লগইন করুন বা অন্য ইমেইল ব্যবহার করুন।',
+            variant: 'destructive',
+          });
+          return { error };
+        }
+        throw error;
+      }
 
-      toast({
-        title: 'অ্যাকাউন্ট তৈরি হয়েছে!',
-        description: 'অনুগ্রহ করে আপনার ইমেইল যাচাই করুন।',
-      });
+      // Check if email confirmation was sent
+      if (data.session === null && data.user) {
+        toast({
+          title: 'কনফার্মেশন ইমেইল পাঠানো হয়েছে!',
+          description: 'অনুগ্রহ করে আপনার ইমেইল চেক করুন এবং কনফার্মেশন লিংক ক্লিক করুন।',
+        });
+        navigate('/auth/confirm?sent=true');
+      } else {
+        // Auto login if email confirmation is disabled
+        toast({
+          title: 'রেজিস্ট্রেশন সফল!',
+          description: 'স্বাগতম! আপনার অ্যাকাউন্ট তৈরি হয়েছে।',
+        });
+        navigate('/dashboard');
+      }
 
       return { error: null };
     } catch (error: any) {
-      toast({
-        title: 'রেজিস্ট্রেশন ব্যর্থ',
-        description: error.message || 'একটি ত্রুটি হয়েছে। আবার চেষ্টা করুন।',
-        variant: 'destructive',
-      });
+      console.error('Signup error:', error);
+      
+      // Handle specific errors
+      if (error.message.includes('password')) {
+        toast({
+          title: 'পাসওয়ার্ড দুর্বল',
+          description: 'অনুগ্রহ করে একটি শক্তিশালী পাসওয়ার্ড ব্যবহার করুন (অন্তত ৬ অক্ষর)।',
+          variant: 'destructive',
+        });
+      } else if (error.message.includes('email')) {
+        toast({
+          title: 'ইমেইল ভুল',
+          description: 'অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা লিখুন।',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'রেজিস্ট্রেশন ব্যর্থ',
+          description: error.message || 'একটি ত্রুটি হয়েছে। আবার চেষ্টা করুন।',
+          variant: 'destructive',
+        });
+      }
       return { error };
     }
   };
@@ -91,7 +141,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if user needs to confirm email
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: 'ইমেইল যাচাই প্রয়োজন',
+            description: 'অনুগ্রহ করে আপনার ইমেইল যাচাই করুন। কনফার্মেশন লিংক ইমেইলে পাঠানো হয়েছে।',
+            variant: 'destructive',
+          });
+          navigate('/auth/confirm?email=' + encodeURIComponent(email));
+          return { error };
+        }
+        throw error;
+      }
 
       toast({
         title: 'লগইন সফল!',
@@ -100,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { error: null };
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: 'লগইন ব্যর্থ',
         description: error.message || 'ইমেইল বা পাসওয়ার্ড ভুল।',
@@ -132,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
@@ -150,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
@@ -235,6 +298,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'কনফার্মেশন ইমেইল আবার পাঠানো হয়েছে',
+        description: 'অনুগ্রহ করে আপনার ইমেইল চেক করুন।',
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      toast({
+        title: 'ইমেইল পাঠানো ব্যর্থ',
+        description: error.message || 'একটি ত্রুটি হয়েছে।',
+        variant: 'destructive',
+      });
+      return { error };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -248,6 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updatePassword,
     updateProfile,
     isAuthenticated: !!user,
+    resendConfirmationEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
