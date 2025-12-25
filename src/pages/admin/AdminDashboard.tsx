@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,8 @@ import {
   Clock,
   MoreHorizontal,
   LogOut,
-  Eye
+  Eye,
+  Filter
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,6 +25,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { PaymentVerificationDashboard } from '@/components/manual-payment/admin/PaymentVerificationDashboard';
+import { paymentVerificationService } from '@/services/manual-payment/verification.service';
 
 // Mock data
 const stats = [
@@ -33,51 +38,41 @@ const stats = [
   { label: "Total Revenue", value: "৳2.5M", icon: CreditCard, change: "+8%" },
 ];
 
-const recentPayments = [
-  {
-    id: 1,
-    studentName: "Ahmed Rahman",
-    studentEmail: "ahmed@example.com",
-    course: "Complete Web Development Bootcamp",
-    amount: 1999,
-    transactionId: "TXN123456789",
-    status: "pending",
-    date: "2024-01-15",
-  },
-  {
-    id: 2,
-    studentName: "Fatima Begum",
-    studentEmail: "fatima@example.com",
-    course: "Data Science with Python",
-    amount: 2499,
-    transactionId: "TXN987654321",
-    status: "pending",
-    date: "2024-01-15",
-  },
-  {
-    id: 3,
-    studentName: "Karim Hassan",
-    studentEmail: "karim@example.com",
-    course: "Digital Marketing Masterclass",
-    amount: 1499,
-    transactionId: "TXN456789123",
-    status: "approved",
-    date: "2024-01-14",
-  },
-];
-
 type TabType = "dashboard" | "courses" | "students" | "payments";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const [paymentStats, setPaymentStats] = useState({
+    total: 0,
+    pending: 0,
+    verified: 0,
+    totalCount: 0,
+    pendingCount: 0,
+    verifiedCount: 0,
+    rejectedCount: 0
+  });
 
-  const handlePaymentAction = (paymentId: number, action: "approve" | "reject") => {
-    toast({
-      title: action === "approve" ? "Payment Approved" : "Payment Rejected",
-      description: `Payment #${paymentId} has been ${action === "approve" ? "approved" : "rejected"}.`,
-    });
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      loadPaymentStats();
+    }
+  }, [activeTab]);
+
+  const loadPaymentStats = async () => {
+    try {
+      const stats = await PaymentService.getPaymentStats();
+      if (stats) {
+        setPaymentStats(stats);
+        
+        // Update the stats array with real data
+        stats[2].value = stats.pendingCount.toString(); // Pending Payments
+        stats[3].value = `৳${(stats.verified / 1000000).toFixed(1)}M`; // Total Revenue
+      }
+    } catch (error) {
+      console.error('Error loading payment stats:', error);
+    }
   };
 
   const sidebarItems = [
@@ -144,7 +139,7 @@ const AdminDashboard = () => {
                 {activeTab === "dashboard" && "Dashboard"}
                 {activeTab === "courses" && "Manage Courses"}
                 {activeTab === "students" && "Students"}
-                {activeTab === "payments" && "Payment Submissions"}
+                {activeTab === "payments" && "Payment Verification"}
               </h1>
               <p className="text-muted-foreground">
                 Welcome back, Admin
@@ -193,101 +188,51 @@ const AdminDashboard = () => {
                 ))}
               </div>
 
-              {/* Recent Payments */}
-              <div className="bg-card rounded-xl border border-border">
-                <div className="p-6 border-b border-border">
-                  <h2 className="text-lg font-semibold text-foreground">Recent Payment Submissions</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Student</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Course</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Amount</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Transaction ID</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentPayments.map((payment) => (
-                        <tr key={payment.id} className="border-b border-border last:border-0">
-                          <td className="p-4">
-                            <div>
-                              <p className="font-medium text-foreground">{payment.studentName}</p>
-                              <p className="text-sm text-muted-foreground">{payment.studentEmail}</p>
-                            </div>
-                          </td>
-                          <td className="p-4 text-foreground">{payment.course}</td>
-                          <td className="p-4 font-medium text-foreground">৳{payment.amount}</td>
-                          <td className="p-4 font-mono text-sm text-muted-foreground">{payment.transactionId}</td>
-                          <td className="p-4">
-                            {payment.status === "pending" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-warning/10 text-warning text-xs font-medium">
-                                <Clock className="h-3 w-3" />
-                                Pending
-                              </span>
-                            ) : payment.status === "approved" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Approved
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-medium">
-                                <XCircle className="h-3 w-3" />
-                                Rejected
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            {payment.status === "pending" ? (
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="success"
-                                  onClick={() => handlePaymentAction(payment.id, "approve")}
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handlePaymentAction(payment.id, "reject")}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="ghost">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>View Details</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Payment Statistics */}
+              <div className="bg-card rounded-xl border border-border p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Payment Statistics</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Total Payments</p>
+                    <p className="text-2xl font-bold">{paymentStats.totalCount}</p>
+                  </div>
+                  <div className="p-4 bg-yellow-50 rounded-lg">
+                    <p className="text-sm text-yellow-700">Pending</p>
+                    <p className="text-2xl font-bold text-yellow-700">{paymentStats.pendingCount}</p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-700">Verified</p>
+                    <p className="text-2xl font-bold text-green-700">{paymentStats.verifiedCount}</p>
+                  </div>
+                  <div className="p-4 bg-red-50 rounded-lg">
+                    <p className="text-sm text-red-700">Rejected</p>
+                    <p className="text-2xl font-bold text-red-700">{paymentStats.rejectedCount}</p>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Payments Tab */}
+          {activeTab === "payments" && (
+            <div>
+              <PaymentVerification />
+            </div>
+          )}
+
           {/* Placeholder for other tabs */}
-          {activeTab !== "dashboard" && (
+          {activeTab === "courses" && (
             <div className="bg-card rounded-xl border border-border p-12 text-center">
               <p className="text-muted-foreground">
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} management coming soon with backend integration.
+                Course management coming soon with backend integration.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "students" && (
+            <div className="bg-card rounded-xl border border-border p-12 text-center">
+              <p className="text-muted-foreground">
+                Student management coming soon with backend integration.
               </p>
             </div>
           )}

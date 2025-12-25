@@ -1,204 +1,144 @@
 // src/pages/Enroll.tsx
-import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  ArrowLeft,
-  Upload,
-  CheckCircle2,
-  AlertCircle,
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { 
+  ArrowLeft, 
+  CheckCircle, 
+  CreditCard, 
   Smartphone,
-  Loader2
+  Banknote,
+  Wallet,
+  Shield,
+  Clock,
+  Loader2,
+  AlertCircle,
+  BookOpen,
+  Users,
+  Star,
+  Globe
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { v4 as uuidv4 } from 'uuid';
-
-const paymentMethods = [
-  {
-    id: "bkash",
-    name: "বিকাশ",
-    number: "০১৭০০-০০০০০০",
-    color: "bg-pink-500",
-    instructions: "উপরের নম্বরে বিকাশ অ্যাপ ব্যবহার করে সেন্ড মানি করুন",
-  },
-  {
-    id: "nagad",
-    name: "নগদ",
-    number: "০১৮০০-০০০০০০",
-    color: "bg-orange-500",
-    instructions: "উপরের নম্বরে নগদ অ্যাপ ব্যবহার করে সেন্ড মানি করুন",
-  },
-  {
-    id: "rocket",
-    name: "রকেট",
-    number: "০১৯০০-০০০০০০",
-    color: "bg-purple-500",
-    instructions: "উপরের নম্বরে রকেট অ্যাপ ব্যবহার করে সেন্ড মানি করুন",
-  },
-];
+import { ManualPaymentModal } from "@/components/manual-payment/ManualPaymentModal";
 
 const Enroll = () => {
   const { id } = useParams();
-  const { toast } = useToast();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedMethod, setSelectedMethod] = useState("bkash");
-  const [transactionId, setTransactionId] = useState("");
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   const [course, setCourse] = useState<any>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showManualPayment, setShowManualPayment] = useState(false);
 
   useEffect(() => {
+    if (!user) {
+      navigate('/login', { state: { from: `/enroll/${id}` } });
+      return;
+    }
+
     fetchCourse();
-  }, [id]);
+    checkEnrollment();
+  }, [id, user, navigate]);
 
   const fetchCourse = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      
+      // Try to fetch course by ID or slug
+      const { data, error: supabaseError } = await supabase
         .from('courses')
         .select('*')
-        .eq('id', id)
+        .or(`id.eq.${id},slug.eq.${id}`)
+        .eq('is_published', true)
         .single();
 
-      if (error) throw error;
+      if (supabaseError) {
+        console.error('Error fetching course:', supabaseError);
+        
+        // Fallback for common IDs
+        if (id === '1' || id === 'web-development-bootcamp') {
+          setCourse(getFallbackCourse());
+          return;
+        }
+        
+        throw new Error('কোর্সটি পাওয়া যায়নি');
+      }
 
+      if (!data) {
+        throw new Error('কোর্সটি পাওয়া যায়নি');
+      }
+
+      console.log('Course found for enrollment:', data);
       setCourse(data);
-    } catch (error) {
-      console.error('Error fetching course:', error);
-      // Fallback to mock data
-      setCourse({
-        id: Number(id),
-        title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
-        price: 1999,
-        instructor_name: "রহিম আহমেদ",
-      });
+    } catch (error: any) {
+      console.error('Error in fetchCourse:', error);
+      setError(error.message);
+      
+      if (id === '1' || id === 'web-development-bootcamp') {
+        setCourse(getFallbackCourse());
+        setError(null);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setScreenshot(e.target.files[0]);
-    }
+  const getFallbackCourse = () => {
+    return {
+      id: 1,
+      title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
+      price: 1999,
+      original_price: 4999,
+      image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop",
+      duration: "৪০ ঘণ্টা",
+      students_count: 1250,
+      rating: 4.8,
+      description: "শুরু থেকে HTML, CSS, JavaScript, React, Node.js এবং আরও অনেক কিছু শিখুন।",
+      category: "ওয়েব ডেভেলপমেন্ট"
+    };
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user) {
-      toast({
-        title: "লগইন প্রয়োজন",
-        description: "এনরোল করতে অনুগ্রহ করে প্রথমে লগইন করুন",
-        variant: "destructive",
-      });
-      navigate('/login');
-      return;
-    }
-
-    if (!transactionId.trim()) {
-      toast({
-        title: "ট্রান্সেকশন আইডি প্রয়োজন",
-        description: "অনুগ্রহ করে আপনার ট্রান্সেকশন আইডি লিখুন",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!screenshot) {
-      toast({
-        title: "স্ক্রিনশট প্রয়োজন",
-        description: "অনুগ্রহ করে আপনার পেমেন্ট স্ক্রিনশট আপলোড করুন",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+  const checkEnrollment = async () => {
+    if (!user || !id) return;
 
     try {
-      // Upload screenshot to Supabase Storage
-      const screenshotName = `payment-proofs/${user.id}/${uuidv4()}-${screenshot.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('course-assets')
-        .upload(screenshotName, screenshot);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL for the screenshot
-      const { data: { publicUrl } } = supabase.storage
-        .from('course-assets')
-        .getPublicUrl(screenshotName);
-
-      // Create enrollment record
-      // In your Enroll.tsx handleSubmit function, update the insert section:
-      const { error: enrollmentError } = await supabase
+      const { data } = await supabase
         .from('enrollments')
-        .insert({
-          user_id: user.id,  // Make sure it's snake_case
-          course_id: id,
-          payment_method: selectedMethod,
-          transaction_id: transactionId,
-          payment_proof_url: publicUrl,
-          amount: course?.price || 0,
-          status: 'pending',
-        } as any); // Temporarily use 'as any' to bypass TypeScript checking
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', id)
+        .single();
 
-      if (enrollmentError) throw enrollmentError;
-
-      toast({
-        title: "পেমেন্ট জমা দেওয়া হয়েছে!",
-        description: "আপনার পেমেন্ট যাচাই করা হচ্ছে। অনুমোদন হলে আপনি ইমেইল পাবেন।",
-      });
-
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-
-    } catch (error: any) {
-      console.error('Error submitting payment:', error);
-      toast({
-        title: "ত্রুটি হয়েছে",
-        description: error.message || "পেমেন্ট জমা দেওয়ার সময় একটি ত্রুটি হয়েছে",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      setIsEnrolled(!!data);
+      if (!!data) {
+        navigate(`/courses/${id}/learn`);
+      }
+    } catch (error) {
+      console.error('Error checking enrollment:', error);
+      setIsEnrolled(false);
     }
   };
 
-  const selectedPayment = paymentMethods.find((m) => m.id === selectedMethod);
+  const handleManualPaymentSuccess = (receiptNumber: string) => {
+    navigate(`/payment/status/${receiptNumber}`);
+  };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!course) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">কোর্স পাওয়া যায়নি</h1>
-            <Link to="/courses">
-              <Button variant="outline">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                কোর্সে ফিরে যান
-              </Button>
-            </Link>
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">লোড হচ্ছে...</p>
           </div>
         </main>
         <Footer />
@@ -206,181 +146,283 @@ const Enroll = () => {
     );
   }
 
+  if (error || !course) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-foreground mb-2">কোর্স পাওয়া যায়নি</h1>
+            <p className="text-muted-foreground mb-6">{error || "এই কোর্সটি খুঁজে পাওয়া যায়নি"}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/courses">
+                <Button variant="outline">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  কোর্সে ফিরে যান
+                </Button>
+              </Link>
+              <Button onClick={fetchCourse}>
+                আবার চেষ্টা করুন
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const courseTitle = course.title || 'কোর্স';
+  const price = course.price || 0;
+  const originalPrice = course.original_price || course.price || 0;
+  const discount = originalPrice > price ? Math.round((1 - price / originalPrice) * 100) : 0;
+  const courseImage = course.image_url || course.thumbnail_url || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop';
+
   return (
     <>
       <Helmet>
-        <title>এনরোল - {course.title} - ক্যাম্পাসবন্ধু</title>
-        <meta name="description" content={`${course.title} কোর্সে আপনার এনরোলমেন্ট সম্পন্ন করুন`} />
+        <title>এনরোল করুন - {courseTitle} - ক্যাম্পাসবন্ধু</title>
+        <meta name="description" content={`${courseTitle} কোর্সে এনরোল করুন`} />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
         <Navbar />
-
-        <main className="flex-1 py-8">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <Link to={`/courses/${id}`} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        
+        <main className="flex-1 py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(`/courses/${id}`)}
+              className="mb-6"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               কোর্সে ফিরে যান
-            </Link>
+            </Button>
 
-            <div className="grid lg:grid-cols-5 gap-8">
-              {/* Payment Form */}
-              <div className="lg:col-span-3 space-y-8">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground mb-2">আপনার এনরোলমেন্ট সম্পন্ন করুন</h1>
-                  <p className="text-muted-foreground">
-                    এই কোর্সে এনরোল করতে নিচের পেমেন্ট নির্দেশনা অনুসরণ করুন।
-                  </p>
-                </div>
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-3xl font-bold text-center mb-8">
+                {courseTitle} - এনরোল করুন
+              </h1>
 
-                {/* Payment Method Selection */}
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground">পেমেন্ট পদ্ধতি নির্বাচন করুন</h2>
-                  <div className="grid grid-cols-3 gap-3">
-                    {paymentMethods.map((method) => (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => setSelectedMethod(method.id)}
-                        className={`p-4 rounded-xl border-2 transition-all ${selectedMethod === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
-                        disabled={isSubmitting}
-                      >
-                        <div className={`h-10 w-10 rounded-lg ${method.color} mx-auto mb-2 flex items-center justify-center`}>
-                          <Smartphone className="h-5 w-5 text-white" />
-                        </div>
-                        <p className="font-medium text-foreground text-sm">{method.name}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Payment Instructions */}
-                {selectedPayment && (
-                  <div className="bg-muted rounded-xl p-6 space-y-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold text-foreground">পেমেন্ট নির্দেশনা</h3>
-                        <ol className="mt-2 space-y-2 text-sm text-muted-foreground">
-                          <li>১. আপনার {selectedPayment.name} অ্যাপ খুলুন</li>
-                          <li>২. "সেন্ড মানি" তে যান</li>
-                          <li>৩. এই নম্বর লিখুন: <span className="font-mono font-semibold text-foreground">{selectedPayment.number}</span></li>
-                          <li>৪. পরিমাণ: <span className="font-semibold text-foreground">৳{course.price}</span></li>
-                          <li>৫. লেনদেন সম্পন্ন করুন</li>
-                          <li>৬. কনফার্মেশনের স্ক্রিনশট নিন</li>
-                          <li>৭. নিচে আপনার ট্রান্সেকশন তথ্য দিন</li>
-                        </ol>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Payment Details Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="transactionId">ট্রান্সেকশন আইডি</Label>
-                    <Input
-                      id="transactionId"
-                      placeholder="যেমন, TXN123456789"
-                      value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
-                      className="h-12"
-                      required
-                      disabled={isSubmitting}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      আপনার পেমেন্ট কনফার্মেশন মেসেজে এটি পাবেন
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="screenshot">পেমেন্ট স্ক্রিনশট</Label>
-                    <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
-                      <input
-                        type="file"
-                        id="screenshot"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        disabled={isSubmitting}
-                      />
-                      <label htmlFor="screenshot" className="cursor-pointer">
-                        {screenshot ? (
-                          <div className="flex items-center justify-center gap-2 text-success">
-                            <CheckCircle2 className="h-5 w-5" />
-                            <span className="font-medium">{screenshot.name}</span>
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Course Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      কোর্স সারাংশ
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={courseImage}
+                          alt={courseTitle}
+                          className="h-20 w-32 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop';
+                          }}
+                        />
+                        <div>
+                          <h3 className="font-semibold">{courseTitle}</h3>
+                          <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {course.duration || '১০ ঘণ্টা'}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {course.students_count || 0} জন
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-4 w-4" />
+                              {course.rating || 4.5}
+                            </div>
                           </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                            <p className="text-muted-foreground">
-                              আপনার পেমেন্ট স্ক্রিনশট আপলোড করতে ক্লিক করুন
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              PNG, JPG সর্বোচ্চ 5MB
-                            </p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>কোর্স ফি</span>
+                          <span className="font-semibold">৳{originalPrice.toLocaleString()}</span>
+                        </div>
+                        {discount > 0 && (
+                          <div className="flex justify-between text-green-600">
+                            <span>ছাড়</span>
+                            <span className="font-semibold">{discount}%</span>
                           </div>
                         )}
-                      </label>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    variant="hero"
-                    size="lg"
-                    className="w-full"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        জমা দেওয়া হচ্ছে...
-                      </>
-                    ) : (
-                      "পেমেন্ট জমা দিন"
-                    )}
-                  </Button>
-                </form>
-              </div>
-
-              {/* Order Summary */}
-              <div className="lg:col-span-2">
-                <div className="bg-card rounded-2xl border border-border p-6 sticky top-24">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">অর্ডার সারসংক্ষেপ</h2>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-medium text-foreground">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground">প্রশিক্ষক: {course.instructor_name}</p>
-                    </div>
-
-                    <div className="border-t border-border pt-4">
-                      <div className="flex justify-between items-center text-lg">
-                        <span className="font-semibold text-foreground">মোট</span>
-                        <span className="font-bold text-foreground">৳{course.price}</span>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="mt-6 p-4 bg-muted rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-success mt-0.5" />
-                      <div className="text-sm">
-                        <p className="font-medium text-foreground">এরপর কী হবে?</p>
-                        <p className="text-muted-foreground">
-                          জমা দেওয়ার পর, আমাদের টিম ২৪ ঘণ্টার মধ্যে আপনার পেমেন্ট যাচাই করবে। অনুমোদন হলে আপনি ইমেইল পাবেন।
+                      <Separator />
+
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>সর্বমোট</span>
+                        <span className="text-primary">৳{price.toLocaleString()}</span>
+                      </div>
+                      
+                      {discount > 0 && (
+                        <p className="text-sm text-green-600 text-center">
+                          আপনি সেভ করছেন ৳{(originalPrice - price).toLocaleString()}
                         </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Payment Options */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      পেমেন্ট অপশন
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {/* Manual Payment Info */}
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <CreditCard className="h-6 w-6 text-blue-600" />
+                          <h3 className="font-semibold text-blue-800">ম্যানুয়াল পেমেন্ট</h3>
+                        </div>
+                        <p className="text-sm text-blue-700 mb-4">
+                          bKash, Nagad, Rocket, ব্যাংক ট্রান্সফার বা ক্যাশের মাধ্যমে পেমেন্ট করুন।
+                          পেমেন্টের প্রুফ জমা দিন, আমরা ২৪ ঘণ্টার মধ্যে ভেরিফাই করব।
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                            <Smartphone className="h-4 w-4 text-green-600" />
+                            <span>bKash/Nagad</span>
+                          </div>
+                          <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                            <Banknote className="h-4 w-4 text-blue-600" />
+                            <span>ব্যাংক ট্রান্সফার</span>
+                          </div>
+                          <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                            <Wallet className="h-4 w-4 text-purple-600" />
+                            <span>ক্যাশ পেমেন্ট</span>
+                          </div>
+                          <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                            <Globe className="h-4 w-4 text-orange-600" />
+                            <span>অন্যান্য</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Methods */}
+                      <div className="space-y-3">
+                        <Button
+                          onClick={() => setShowManualPayment(true)}
+                          className="w-full h-14 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
+                          variant="default"
+                        >
+                          <CreditCard className="h-5 w-5 mr-2" />
+                          ম্যানুয়াল পেমেন্ট করুন
+                        </Button>
+
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500 mb-2">
+                            অটোমেটিক পেমেন্ট গেটওয়ে শীঘ্রই আসছে
+                          </p>
+                          <div className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                            <Shield className="h-3 w-3" />
+                            সিকিউর পেমেন্ট গেটওয়ে
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Guarantee */}
+                      <div className="border rounded-lg p-4">
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-green-600" />
+                          আমাদের গ্যারান্টি
+                        </h4>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span>১০০% সুরক্ষিত পেমেন্ট</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span>৭ দিনের রিফান্ড পলিসি</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span>পেমেন্ট ভেরিফাই হতে ২৪ ঘণ্টা সময় লাগে</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span>ভেরিফিকেশনের পর স্বয়ংক্রিয় এনরোলমেন্ট</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Help */}
+                      <div className="text-center text-sm text-gray-600 border-t pt-4">
+                        <p className="mb-1">পেমেন্টে সমস্যা?</p>
+                        <p className="font-semibold text-primary">০১৭৭০-৬১৮৫৭৫</p>
+                        <p className="text-xs text-gray-500 mt-1">সকাল ৯টা - রাত ১০টা</p>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* Important Notes */}
+              <Card className="mt-8">
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-4 text-foreground">গুরুত্বপূর্ণ নির্দেশনা</h3>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                      পেমেন্টের স্ক্রিনশট বা স্লিপের ছবি সংরক্ষণ করুন
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                      ট্রানজেকশন আইডি নোট করুন
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                      পেমেন্ট সাবমিট করার পর রসিদ নম্বরটি সংরক্ষণ করুন
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                      পেমেন্ট ভেরিফাই হলে আপনাকে ইমেইল নোটিফিকেশন পাঠানো হবে
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                      ভেরিফিকেশনের পর স্বয়ংক্রিয়ভাবে কোর্সে এনরোল্ড হয়ে যাবেন
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                      যেকোনো সমস্যায় আমাদের হেল্পলাইনে যোগাযোগ করুন
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>
 
         <Footer />
+
+        {/* Manual Payment Modal */}
+        {showManualPayment && (
+          <ManualPaymentModal
+            courseId={course.id.toString()}
+            courseTitle={courseTitle}
+            amount={price}
+            onClose={() => setShowManualPayment(false)}
+            onSuccess={handleManualPaymentSuccess}
+          />
+        )}
       </div>
     </>
   );
