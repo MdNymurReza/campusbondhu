@@ -26,6 +26,7 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,7 +59,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-  <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:id" element={<CourseDetail />} />
                 <Route path="/about" element={<About />} />
@@ -70,6 +71,7 @@ const App = () => (
                 <Route element={<ProtectedRoute />}>
                   <Route path="/enroll/:id" element={<Enroll />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<Profile />} />
                 </Route>
                 
                 {/* Admin routes */}
