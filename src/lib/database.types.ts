@@ -10,6 +10,32 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       courses: {
         Row: {
           id: string
@@ -74,10 +100,10 @@ export interface Database {
           id: string
           user_id: string
           course_id: string
-          payment_method: string
-          transaction_id: string
-          payment_proof_url: string
-          amount: number
+          payment_method: string | null
+          transaction_id: string | null
+          payment_proof_url: string | null
+          amount: number | null
           status: 'pending' | 'approved' | 'rejected'
           progress: number
           last_accessed: string | null
@@ -89,10 +115,10 @@ export interface Database {
           id?: string
           user_id: string
           course_id: string
-          payment_method: string
-          transaction_id: string
-          payment_proof_url: string
-          amount: number
+          payment_method?: string | null
+          transaction_id?: string | null
+          payment_proof_url?: string | null
+          amount?: number | null
           status?: 'pending' | 'approved' | 'rejected'
           progress?: number
           last_accessed?: string | null
@@ -104,10 +130,10 @@ export interface Database {
           id?: string
           user_id?: string
           course_id?: string
-          payment_method?: string
-          transaction_id?: string
-          payment_proof_url?: string
-          amount?: number
+          payment_method?: string | null
+          transaction_id?: string | null
+          payment_proof_url?: string | null
+          amount?: number | null
           status?: 'pending' | 'approved' | 'rejected'
           progress?: number
           last_accessed?: string | null

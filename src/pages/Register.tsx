@@ -1,11 +1,13 @@
+// src/pages/Register.tsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookOpen, Mail, Lock, User, Eye, EyeOff, GraduationCap, Github, Chrome } from "lucide-react";
+import { BookOpen, Mail, Lock, User, Eye, EyeOff, GraduationCap, Github, Chrome, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -16,33 +18,61 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const navigate = useNavigate();
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = "নাম প্রয়োজন";
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = "ইমেইল প্রয়োজন";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "বৈধ ইমেইল ঠিকানা লিখুন";
+    }
+    
+    if (!formData.password) {
+      newErrors.password = "পাসওয়ার্ড প্রয়োজন";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে";
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "পাসওয়ার্ড মিলছে না";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      alert("পাসওয়ার্ড মিলছে না");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে");
-      return;
-    }
-
-    if (!formData.email.includes('@')) {
-      alert("অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা লিখুন");
+    if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    await signUp(formData.email, formData.password, formData.name);
+    const { error } = await signUp(formData.email, formData.password, formData.name);
+    
+    if (!error) {
+      // Success - form will reset automatically via redirect
+      console.log('✅ Registration successful');
+    }
+    
     setIsLoading(false);
   };
 
@@ -76,6 +106,32 @@ const Register = () => {
               <p className="text-lg text-white/80">
                 হাজার হাজার বাংলাদেশি শিক্ষার্থীর সাথে আপনার শেখার যাত্রা শুরু করুন।
               </p>
+              
+              <div className="space-y-4 pt-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-left">
+                  <h3 className="font-semibold mb-2">কেন রেজিস্টার করবেন?</h3>
+                  <ul className="space-y-2 text-sm text-white/90">
+                    <li className="flex items-start gap-2">
+                      <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                        <span className="text-xs">✓</span>
+                      </div>
+                      <span>বিনামূল্যে কোর্স অ্যাক্সেস</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                        <span className="text-xs">✓</span>
+                      </div>
+                      <span>অগ্রগতি ট্র্যাক করুন</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                        <span className="text-xs">✓</span>
+                      </div>
+                      <span>সার্টিফিকেট পান</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -107,7 +163,7 @@ const Register = () => {
                 type="button"
                 variant="outline"
                 size="lg"
-                className="w-full"
+                className="w-full hover:bg-gray-50"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
               >
@@ -119,7 +175,7 @@ const Register = () => {
                 type="button"
                 variant="outline"
                 size="lg"
-                className="w-full"
+                className="w-full hover:bg-gray-50"
                 onClick={handleGithubLogin}
                 disabled={isLoading}
               >
@@ -152,11 +208,17 @@ const Register = () => {
                     placeholder="আপনার পূর্ণ নাম"
                     value={formData.name}
                     onChange={handleChange}
-                    className="pl-10 h-12"
+                    className={`pl-10 h-12 ${errors.name ? 'border-red-500' : ''}`}
                     required
                     disabled={isLoading}
                   />
                 </div>
+                {errors.name && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.name}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -170,11 +232,17 @@ const Register = () => {
                     placeholder="your@email.com"
                     value={formData.email}
                     onChange={handleChange}
-                    className="pl-10 h-12"
+                    className={`pl-10 h-12 ${errors.email ? 'border-red-500' : ''}`}
                     required
                     disabled={isLoading}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -188,7 +256,7 @@ const Register = () => {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-10 pr-10 h-12"
+                    className={`pl-10 pr-10 h-12 ${errors.password ? 'border-red-500' : ''}`}
                     required
                     minLength={6}
                     disabled={isLoading}
@@ -202,9 +270,16 @@ const Register = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">
-                  কমপক্ষে ৬ অক্ষরের হতে হবে
-                </p>
+                {errors.password ? (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.password}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    কমপক্ষে ৬ অক্ষরের হতে হবে
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -218,21 +293,37 @@ const Register = () => {
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="pl-10 h-12"
+                    className={`pl-10 h-12 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                     required
                     minLength={6}
                     disabled={isLoading}
                   />
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
+
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-700">
+                  রেজিস্টার করার পর ইমেইল যাচাই করার জন্য একটি লিংক পাবেন।
+                </AlertDescription>
+              </Alert>
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  "অ্যাকাউন্ট তৈরি হচ্ছে..."
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    অ্যাকাউন্ট তৈরি হচ্ছে...
+                  </>
                 ) : (
                   "অ্যাকাউন্ট তৈরি করুন"
                 )}
@@ -245,6 +336,14 @@ const Register = () => {
                 এখানে লগইন করুন
               </Link>
             </p>
+
+            <div className="text-xs text-gray-500 text-center pt-4 border-t">
+              <p>
+                রেজিস্টার করে আপনি আমাদের{' '}
+                <Link to="/terms" className="text-blue-600 hover:underline">সেবার শর্তাবলী</Link> এবং{' '}
+                <Link to="/privacy" className="text-blue-600 hover:underline">গোপনীয়তা নীতি</Link> মেনে নিচ্ছেন।
+              </p>
+            </div>
           </div>
         </div>
       </div>
