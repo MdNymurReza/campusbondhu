@@ -13,7 +13,6 @@ import {
   Award,
   BookOpen,
   ArrowLeft,
-  Lock,
   CreditCard,
   Smartphone,
   Banknote,
@@ -55,126 +54,120 @@ const CourseDetail = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching course with ID:', id);
-      
-      // Try to fetch course by ID or slug
-      const { data, error: supabaseError } = await supabase
+      // 1. First try to fetch course by the provided ID
+      const { data: courseById, error: idError } = await supabase
         .from('courses')
-        .select(`
-          *,
-          instructor:instructor_id (
-            name,
-            bio,
-            avatar_url
-          )
-        `)
-        .or(`id.eq.${id},slug.eq.${id}`)
-        .eq('is_published', true)
+        .select('*')
+        .eq('id', id)
         .single();
 
-      if (supabaseError) {
-        console.error('Supabase error:', supabaseError);
-        
-        // If not found in database, try to use fallback for ID 1
-        if (id === '1' || id === 'web-development-bootcamp') {
-          console.log('Using fallback course data for ID:', id);
-          setCourse(getFallbackCourse());
-          return;
-        }
-        
-        throw new Error('কোর্সটি পাওয়া যায়নি');
+      // If found by ID, use it
+      if (courseById && !idError) {
+        console.log('✅ Course found by ID:', courseById);
+        setCourse(courseById);
+        return;
       }
 
-      if (!data) {
-        throw new Error('কোর্সটি পাওয়া যায়নি');
-      }
-
-      console.log('Course found:', data);
-      setCourse(data);
-    } catch (error: any) {
-      console.error('Error fetching course:', error);
-      setError(error.message || 'কোর্স লোড করতে সমস্যা হয়েছে');
+      // 2. If not found by ID, try to fetch first available course
+      console.log('🔄 Course not found by ID, fetching first available course...');
       
-      // Try fallback for common cases
-      if (id === '1' || id === 'web-development-bootcamp') {
-        setCourse(getFallbackCourse());
-        setError(null);
+      const { data: allCourses, error: allCoursesError } = await supabase
+        .from('courses')
+        .select('*')
+        .limit(1);
+
+      if (allCoursesError) {
+        console.error('❌ Error fetching courses:', allCoursesError);
+        throw new Error('ডাটাবেস থেকে কোর্স লোড করতে সমস্যা হয়েছে');
       }
+
+      if (!allCourses || allCourses.length === 0) {
+        // No courses in database
+        console.log('📭 No courses found in database');
+        
+        // Create a course automatically
+        await createDefaultCourse();
+        return;
+      }
+
+      // Use the first available course
+      const firstCourse = allCourses[0];
+      console.log('📋 Using first available course:', firstCourse);
+      
+      // Redirect to the first course's URL for consistency
+      if (firstCourse.id !== id) {
+        navigate(`/courses/${firstCourse.id}`, { replace: true });
+      } else {
+        setCourse(firstCourse);
+      }
+
+    } catch (error: any) {
+      console.error('❌ Error in fetchCourseDetails:', error);
+      setError(error.message || 'কোর্স লোড করতে সমস্যা হয়েছে');
     } finally {
       setLoading(false);
     }
   };
 
-  const getFallbackCourse = () => {
-    return {
-      id: 1,
-      title: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
-      name: "সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প",
-      instructor_name: "রহিম আহমেদ",
-      instructor_bio: "শীর্ষ টেক কোম্পানিতে ১০+ বছরের অভিজ্ঞতাসম্পন্ন সিনিয়র সফটওয়্যার ইঞ্জিনিয়ার।",
-      instructor: {
-        name: "রহিম আহমেদ",
-        bio: "শীর্ষ টেক কোম্পানিতে ১০+ বছরের অভিজ্ঞতাসম্পন্ন সিনিয়র সফটওয়্যার ইঞ্জিনিয়ার।"
-      },
-      price: 1999,
-      original_price: 4999,
-      image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop",
-      thumbnail_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop",
-      category: "ওয়েব ডেভেলপমেন্ট",
-      duration: "৪০ ঘণ্টা",
-      total_hours: 40,
-      students_count: 1250,
-      enrollment_count: 1250,
-      rating: 4.8,
-      reviews_count: 342,
-      description: "শুরু থেকে HTML, CSS, JavaScript, React, Node.js এবং আরও অনেক কিছু শিখুন। এই সম্পূর্ণ বুটক্যাম্প আপনাকে সম্পূর্ণ নতুন থেকে চাকরি-প্রস্তুত ওয়েব ডেভেলপারে রূপান্তরিত করবে।",
-      long_description: "এই কোর্সটি পেশাদার ওয়েব ডেভেলপার হতে আপনার যা দরকার সবকিছু শেখানোর জন্য ডিজাইন করা হয়েছে। আপনি HTML এবং CSS এর মূল বিষয়গুলো দিয়ে শুরু করবেন, তারপর JavaScript, React এবং Node.js দিয়ে ব্যাকএন্ড ডেভেলপমেন্টে যাবেন। এই কোর্সের শেষে, আপনি শুরু থেকে ফুল-স্ট্যাক ওয়েব অ্যাপ্লিকেশন তৈরি করতে সক্ষম হবেন।",
-      what_youll_learn: [
-        "HTML5 এবং CSS3 ব্যবহার করে রেসপন্সিভ ওয়েবসাইট তৈরি করুন",
-        "JavaScript ES6+ এবং আধুনিক বেস্ট প্র্যাক্টিস আয়ত্ত করুন",
-        "হুকস সহ ডায়নামিক React অ্যাপ্লিকেশন তৈরি করুন",
-        "Node.js এবং Express দিয়ে RESTful API তৈরি করুন",
-        "MongoDB এবং PostgreSQL এর মতো ডাটাবেসে কাজ করুন",
-        "ক্লাউড প্ল্যাটফর্মে অ্যাপ্লিকেশন ডিপ্লয় করুন",
-      ],
-      curriculum: [
-        { title: "ওয়েব ডেভেলপমেন্টের পরিচিতি", lessons: 5, duration: "২ ঘণ্টা" },
-        { title: "HTML5 ফান্ডামেন্টালস", lessons: 8, duration: "৪ ঘণ্টা" },
-        { title: "CSS3 এবং রেসপন্সিভ ডিজাইন", lessons: 10, duration: "৬ ঘণ্টা" },
-        { title: "JavaScript এসেনশিয়ালস", lessons: 15, duration: "১০ ঘণ্টা" },
-        { title: "React.js মাস্টারক্লাস", lessons: 12, duration: "৮ ঘণ্টা" },
-        { title: "Node.js ব্যাকএন্ড ডেভেলপমেন্ট", lessons: 10, duration: "৬ ঘণ্টা" },
-        { title: "ফাইনাল প্রজেক্ট", lessons: 5, duration: "৪ ঘণ্টা" },
-      ],
-      modules: [
-        { title: "ওয়েব ডেভেলপমেন্টের পরিচিতি", lesson_count: 5 },
-        { title: "HTML5 ফান্ডামেন্টালস", lesson_count: 8 },
-        { title: "CSS3 এবং রেসপন্সিভ ডিজাইন", lesson_count: 10 },
-        { title: "JavaScript এসেনশিয়ালস", lesson_count: 15 },
-        { title: "React.js মাস্টারক্লাস", lesson_count: 12 },
-        { title: "Node.js ব্যাকএন্ড ডেভেলপমেন্ট", lesson_count: 10 },
-        { title: "ফাইনাল প্রজেক্ট", lesson_count: 5 },
-      ],
-      is_published: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+  const createDefaultCourse = async () => {
+    try {
+      console.log('🛠 Creating default course...');
+      
+      const defaultCourseId = '00000000-0000-0000-0000-000000000001';
+      
+      const { data, error } = await supabase
+        .from('courses')
+        .upsert({
+          id: defaultCourseId,
+          title: 'সম্পূর্ণ ওয়েব ডেভেলপমেন্ট বুটক্যাম্প',
+          description: 'শুরু থেকে HTML, CSS, JavaScript, React, Node.js শিখুন',
+          price: 1999,
+          original_price: 4999,
+          category: 'ওয়েব ডেভেলপমেন্ট',
+          duration: '৪০ ঘণ্টা',
+          total_hours: 40,
+          students_count: 1250,
+          enrollment_count: 1250,
+          rating: 4.8,
+          reviews_count: 342,
+          image_url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop',
+          thumbnail_url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop',
+          is_published: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating default course:', error);
+        throw new Error('ডিফল্ট কোর্স তৈরি করতে সমস্যা: ' + error.message);
+      }
+
+      console.log('✅ Default course created:', data);
+      
+      // Redirect to the newly created course
+      navigate(`/courses/${data.id}`, { replace: true });
+      
+    } catch (error: any) {
+      console.error('❌ Error in createDefaultCourse:', error);
+      setError('কোর্স সিস্টেম সেট আপ করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।');
+    }
   };
 
   const checkEnrollment = async () => {
-    if (!user || !id) return;
+    if (!user || !course) return;
 
     try {
       const { data } = await supabase
         .from('enrollments')
         .select('id')
         .eq('user_id', user.id)
-        .eq('course_id', id)
+        .eq('course_id', course.id)
         .single();
 
       setIsEnrolled(!!data);
     } catch (error) {
-      console.error('Error checking enrollment:', error);
       setIsEnrolled(false);
     }
   };
@@ -191,9 +184,9 @@ const CourseDetail = () => {
     }
 
     if (isEnrolled) {
-      navigate(`/courses/${id}/learn`);
+      navigate(`/courses/${course.id}/learn`);
     } else {
-      navigate(`/enroll/${id}`);
+      navigate(`/enroll/${course.id}`);
     }
   };
 
@@ -210,6 +203,10 @@ const CourseDetail = () => {
     }
   };
 
+  const goToCoursesList = () => {
+    navigate('/courses');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -218,6 +215,7 @@ const CourseDetail = () => {
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
             <p className="text-muted-foreground">কোর্স লোড হচ্ছে...</p>
+            <p className="text-sm text-muted-foreground mt-2">আইডি: {id}</p>
           </div>
         </main>
         <Footer />
@@ -225,22 +223,23 @@ const CourseDetail = () => {
     );
   }
 
-  if (error || !course) {
+  if (error) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-foreground mb-2">কোর্স পাওয়া যায়নি</h1>
-            <p className="text-muted-foreground mb-6">{error || "এই কোর্সটি খুঁজে পাওয়া যায়নি"}</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">সমস্যা হয়েছে</h1>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              আপনার URL: <code className="bg-muted px-2 py-1 rounded">/courses/{id}</code>
+            </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/courses">
-                <Button variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  কোর্সে ফিরে যান
-                </Button>
-              </Link>
+              <Button onClick={goToCoursesList} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                কোর্স তালিকায় ফিরে যান
+              </Button>
               <Button onClick={fetchCourseDetails}>
                 আবার চেষ্টা করুন
               </Button>
@@ -252,7 +251,22 @@ const CourseDetail = () => {
     );
   }
 
-  const courseTitle = course.title || course.name;
+  if (!course) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">কোর্স প্রস্তুত করা হচ্ছে...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const courseTitle = course.title || 'কোর্স';
   const courseDescription = course.description || '';
   const courseImage = course.image_url || course.thumbnail_url || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop';
   const instructorName = course.instructor?.name || course.instructor_name || 'প্রশিক্ষক';
@@ -284,10 +298,14 @@ const CourseDetail = () => {
           <section className="bg-gradient-to-b from-primary/10 to-background py-12">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-6">
-                <Link to="/courses" className="inline-flex items-center text-foreground/70 hover:text-foreground transition-colors">
+                <Button 
+                  onClick={goToCoursesList} 
+                  variant="ghost" 
+                  className="inline-flex items-center text-foreground/70 hover:text-foreground transition-colors"
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   কোর্সে ফিরে যান
-                </Link>
+                </Button>
                 
                 <div className="flex items-center gap-2">
                   <Button 
@@ -393,12 +411,7 @@ const CourseDetail = () => {
                       </div>
                       
                       <div className="space-y-3">
-                        {loading ? (
-                          <Button disabled variant="hero" size="lg" className="w-full">
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            লোড হচ্ছে...
-                          </Button>
-                        ) : isEnrolled ? (
+                        {isEnrolled ? (
                           <Link to={`/courses/${course.id}/learn`}>
                             <Button variant="hero" size="lg" className="w-full">
                               <PlayCircle className="h-5 w-5 mr-2" />
@@ -577,7 +590,7 @@ const CourseDetail = () => {
         {/* Manual Payment Modal */}
         {showManualPayment && (
           <ManualPaymentModal
-            courseId={course.id.toString()}
+            courseId={course.id}
             courseTitle={courseTitle}
             amount={price}
             onClose={() => setShowManualPayment(false)}

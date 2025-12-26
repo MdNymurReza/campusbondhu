@@ -1,14 +1,14 @@
 // src/components/manual-payment/ManualPaymentModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { paymentSubmissionService } from '../../services/manual-payment/submission.service';
+import { PaymentMethod } from '../../services/manual-payment/types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { X, Loader2, CheckCircle, Upload, Smartphone, Building2, Radio, Banknote, Wallet } from 'lucide-react';
+import { X, Loader2, CheckCircle, Smartphone, Building2, Radio, Banknote, Wallet } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ManualPaymentModalProps {
@@ -33,8 +33,8 @@ export const ManualPaymentModal: React.FC<ManualPaymentModalProps> = ({
   const [successData, setSuccessData] = useState<any>(null);
 
   // Form state
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | ''>('');
   const [formData, setFormData] = useState({
-    paymentMethod: '',
     senderNumber: '',
     senderName: '',
     transactionId: '',
@@ -46,21 +46,26 @@ export const ManualPaymentModal: React.FC<ManualPaymentModalProps> = ({
   const [proofFile, setProofFile] = useState<File | null>(null);
 
   const paymentMethods = [
-    { id: 'bkash', name: 'bKash', icon: Smartphone, color: 'text-pink-600' },
-    { id: 'nagad', name: 'Nagad', icon: Building2, color: 'text-purple-600' },
-    { id: 'rocket', name: 'Rocket', icon: Radio, color: 'text-green-600' },
-    { id: 'bank', name: 'ব্যাংক ট্রান্সফার', icon: Banknote, color: 'text-blue-600' },
-    { id: 'cash', name: 'নগদ', icon: Wallet, color: 'text-yellow-600' },
+    { id: 'bkash' as PaymentMethod, name: 'bKash', icon: Smartphone, color: 'text-pink-600' },
+    { id: 'nagad' as PaymentMethod, name: 'Nagad', icon: Building2, color: 'text-purple-600' },
+    { id: 'rocket' as PaymentMethod, name: 'Rocket', icon: Radio, color: 'text-green-600' },
+    { id: 'bank' as PaymentMethod, name: 'ব্যাংক ট্রান্সফার', icon: Banknote, color: 'text-blue-600' },
+    { id: 'cash' as PaymentMethod, name: 'নগদ', icon: Wallet, color: 'text-yellow-600' },
   ];
 
-  const handleMethodSelect = (methodId: string) => {
-    setFormData(prev => ({ ...prev, paymentMethod: methodId }));
+  const handleMethodSelect = (methodId: PaymentMethod) => {
+    setSelectedMethod(methodId);
     setStep('form');
   };
 
   const handleSubmit = async () => {
     if (!user) {
       setError('লগইন করুন');
+      return;
+    }
+
+    if (!selectedMethod) {
+      setError('পেমেন্ট পদ্ধতি নির্বাচন করুন');
       return;
     }
 
@@ -78,71 +83,51 @@ export const ManualPaymentModal: React.FC<ManualPaymentModalProps> = ({
     setError('');
 
     try {
-      // Upload proof image
-      const fileExt = proofFile.name.split('.').pop();
-      const fileName = `${user.id}_${courseId}_${Date.now()}.${fileExt}`;
-      const filePath = `payment-proofs/${user.id}/${fileName}`;
+      // Create payment submission data - NO BUCKET NEEDED
+      const submissionData = {
+        courseId,
+        userId: user.id,
+        amount: amount,
+        paymentMethod: selectedMethod,
+        paymentType: 'personal' as const,
+        senderNumber: formData.senderNumber,
+        senderName: formData.senderName,
+        transactionId: formData.transactionId.trim(),
+        transactionDate: formData.transactionDate,
+        transactionTime: format(new Date(), 'HH:mm'),
+        amountPaid: parseFloat(formData.amountPaid.toString()),
+        proofImages: [proofFile],
+        receiptImage: undefined,
+        userNote: formData.note
+      };
 
-      const { error: uploadError } = await supabase.storage
-        .from('payments')
-        .upload(filePath, proofFile);
+      const result = await paymentSubmissionService.submitPayment(submissionData);
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('payments')
-        .getPublicUrl(filePath);
-
-      // Create payment record
-      const { data: payment, error: paymentError } = await supabase
-        .from('manual_payments')
-        .insert({
-          user_id: user.id,
-          course_id: courseId,
-          amount: amount,
-          amount_paid: formData.amountPaid,
-          payment_method: formData.paymentMethod,
-          status: 'submitted',
-          sender_number: formData.senderNumber,
-          sender_name: formData.senderName,
-          transaction_id: formData.transactionId.trim(),
-          transaction_date: formData.transactionDate,
-          proof_images: [publicUrl],
-          user_note: formData.note,
-        })
-        .select('receipt_number, id')
-        .single();
-
-      if (paymentError) throw paymentError;
-
-      setSuccessData(payment);
-      setStep('success');
-      onSuccess(payment.receipt_number);
+      if (result.success && result.payment) {
+        setSuccessData(result.payment);
+        setStep('success');
+        onSuccess(result.payment.receipt_number);
+      } else {
+        setError(result.message || 'জমা দিতে সমস্যা হয়েছে');
+      }
 
     } catch (err: any) {
       setError(err.message || 'একটি ত্রুটি হয়েছে');
+      console.error('Payment submission error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Add this function inside CourseDetail.tsx or create a separate file
-const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSuccess }) => {
-    // Simplified modal implementation
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full">
-          <h3 className="text-xl font-bold mb-4">Manual Payment</h3>
-          <p>Manual payment modal will be implemented here.</p>
-          <Button onClick={onClose} className="mt-4">
-            Close
-          </Button>
-        </div>
-      </div>
-    );
+  // Helper: Convert file to Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
-  
-  // Then use SimpleManualPaymentModal instead of ManualPaymentModal
 
   const renderStep = () => {
     switch (step) {
@@ -174,23 +159,23 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
         );
 
       case 'form':
-        const selectedMethod = paymentMethods.find(m => m.id === formData.paymentMethod);
-        const Icon = selectedMethod?.icon || Wallet;
+        const selectedMethodInfo = paymentMethods.find(m => m.id === selectedMethod);
+        const Icon = selectedMethodInfo?.icon || Wallet;
 
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-full ${selectedMethod?.color} bg-opacity-10`}>
+              <div className={`p-2 rounded-full ${selectedMethodInfo?.color} bg-opacity-10`}>
                 <Icon className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-semibold">{selectedMethod?.name} এর মাধ্যমে পেমেন্ট</h3>
+                <h3 className="font-semibold">{selectedMethodInfo?.name} এর মাধ্যমে পেমেন্ট</h3>
                 <p className="text-sm text-gray-600">পেমেন্টের তথ্য দিন</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              {['bkash', 'nagad', 'rocket'].includes(formData.paymentMethod) && (
+              {['bkash', 'nagad', 'rocket'].includes(selectedMethod) && (
                 <div>
                   <Label htmlFor="senderNumber">আপনার মোবাইল নম্বর *</Label>
                   <Input
@@ -203,7 +188,7 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
                 </div>
               )}
 
-              {['bank', 'cash'].includes(formData.paymentMethod) && (
+              {['bank', 'cash'].includes(selectedMethod) && (
                 <div>
                   <Label htmlFor="senderName">আপনার নাম *</Label>
                   <Input
@@ -244,7 +229,10 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
                   id="amountPaid"
                   type="number"
                   value={formData.amountPaid}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amountPaid: parseFloat(e.target.value) }))}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    amountPaid: parseFloat(e.target.value) || 0 
+                  }))}
                   required
                 />
               </div>
@@ -266,6 +254,9 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
                   {proofFile ? (
                     <div className="space-y-2">
                       <p className="font-medium">{proofFile.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {(proofFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
                       <Button
                         variant="outline"
                         size="sm"
@@ -275,8 +266,7 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
                       </Button>
                     </div>
                   ) : (
-                    <>
-                      <Upload className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                    <div>
                       <p className="mb-2">স্ক্রিনশট বা রিসিপ্টের ছবি আপলোড করুন</p>
                       <Button
                         variant="outline"
@@ -287,11 +277,21 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
                       <input
                         id="proof-upload"
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.pdf"
                         className="hidden"
-                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Check file size (max 5MB)
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert('ফাইল সাইজ খুব বড়! সর্বোচ্চ 5MB পর্যন্ত ফাইল আপলোড করতে পারবেন।');
+                              return;
+                            }
+                            setProofFile(file);
+                          }
+                        }}
                       />
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
@@ -302,13 +302,14 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
                 variant="outline"
                 onClick={() => setStep('method')}
                 className="flex-1"
+                disabled={loading}
               >
                 পিছনে
               </Button>
               <Button
                 onClick={handleSubmit}
                 className="flex-1 bg-green-600 hover:bg-green-700"
-                disabled={loading || !formData.transactionId || !proofFile}
+                disabled={loading || !selectedMethod || !formData.transactionId || !proofFile}
               >
                 {loading ? (
                   <>
@@ -337,6 +338,7 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
               <div className="bg-gray-50 p-4 rounded-lg mb-6">
                 <p className="font-mono font-bold text-lg">রসিদ: {successData.receipt_number}</p>
                 <p className="text-sm text-gray-500 mt-1">এই রসিদ নম্বরটি সংরক্ষণ করুন</p>
+                <p className="text-sm text-gray-500 mt-1">ট্র্যাকিং আইডি: {successData.tracking_id}</p>
               </div>
             )}
 
@@ -361,6 +363,17 @@ const SimpleManualPaymentModal = ({ courseId, courseTitle, amount, onClose, onSu
         );
     }
   };
+
+  if (!user) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600 mb-4">পেমেন্ট করতে লগইন করুন</p>
+        <Button onClick={() => window.location.href = '/login'}>
+          লগইন করুন
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

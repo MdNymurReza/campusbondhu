@@ -1,9 +1,8 @@
 // src/components/manual-payment/user/PaymentSubmissionForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { paymentSubmissionService } from '../../../services/manual-payment/submission.service';
-import { PaymentMethod, PaymentSubmission } from '../../../services/manual-payment/types'; // ADD THIS IMPORT
-import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { PaymentMethod, PaymentSubmission } from '../../../services/manual-payment/types';
 import { ProofUploader } from './ProofUploader';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -35,20 +34,12 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState<any>(null);
 
-  // FIXED: Use a separate state for selected method to avoid type issues
+  // Payment method state
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | ''>('');
   
-  const [formData, setFormData] = useState<{
-    paymentType: 'personal' | 'agent' | 'bank_transfer';
-    senderNumber: string;
-    senderName: string;
-    transactionId: string;
-    transactionDate: string;
-    transactionTime: string;
-    amountPaid: number;
-    userNote: string;
-  }>({
-    paymentType: 'personal',
+  // Form state
+  const [formData, setFormData] = useState({
+    paymentType: 'personal' as 'personal' | 'agent' | 'bank_transfer',
     senderNumber: '',
     senderName: '',
     transactionId: '',
@@ -67,7 +58,6 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
       return;
     }
 
-    // FIXED: Use the separate state for payment method validation
     if (!selectedPaymentMethod) {
       setError('দয়া করে একটি পেমেন্ট পদ্ধতি নির্বাচন করুন');
       return;
@@ -82,12 +72,12 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
     setError('');
 
     try {
-      // FIXED: Create properly typed submission object
+      // Create submission data - NO BUCKET NEEDED
       const submission: PaymentSubmission = {
         courseId,
         userId: user.id,
         amount: coursePrice,
-        paymentMethod: selectedPaymentMethod as PaymentMethod, // This is now properly typed
+        paymentMethod: selectedPaymentMethod as PaymentMethod,
         paymentType: formData.paymentType,
         senderNumber: formData.senderNumber,
         senderName: formData.senderName,
@@ -110,26 +100,48 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
         setError(result.message || 'জমা দিতে সমস্যা হয়েছে');
       }
     } catch (err: any) {
+      console.error('Submission error:', err);
       setError(err.message || 'একটি ত্রুটি হয়েছে');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMethodSelect = (method: PaymentMethod) => {
-    setSelectedPaymentMethod(method);
-    setStep('details');
-  };
+  const paymentMethods = [
+    { id: 'bkash' as PaymentMethod, name: 'bKash' },
+    { id: 'nagad' as PaymentMethod, name: 'Nagad' },
+    { id: 'rocket' as PaymentMethod, name: 'Rocket' },
+    { id: 'bank' as PaymentMethod, name: 'ব্যাংক ট্রান্সফার' },
+    { id: 'cash' as PaymentMethod, name: 'নগদ' },
+    { id: 'others' as PaymentMethod, name: 'অন্যান্য' },
+  ];
 
   const renderStep = () => {
     switch (step) {
       case 'method':
         return (
-          <PaymentMethodSelector
-            selectedMethod={selectedPaymentMethod}
-            onSelect={handleMethodSelect}
-            onBack={onCancel}
-          />
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-center">পেমেন্ট মাধ্যম নির্বাচন করুন</h3>
+            <div className="grid gap-3">
+              {paymentMethods.map((method) => (
+                <button
+                  key={method.id}
+                  onClick={() => {
+                    setSelectedPaymentMethod(method.id);
+                    setStep('details');
+                  }}
+                  className={`w-full p-4 border rounded-lg text-left hover:bg-gray-50 transition-colors ${
+                    selectedPaymentMethod === method.id ? 'border-blue-500 bg-blue-50' : ''
+                  }`}
+                >
+                  <h5 className="font-semibold">{method.name}</h5>
+                </button>
+              ))}
+            </div>
+            <Button variant="outline" onClick={onCancel} className="w-full">
+              বাতিল করুন
+            </Button>
+          </div>
         );
 
       case 'details':
@@ -146,7 +158,7 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
             {/* Show selected payment method */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-700">
-                <span className="font-semibold">নির্বাচিত পদ্ধতি:</span> {selectedPaymentMethod}
+                <span className="font-semibold">নির্বাচিত পদ্ধতি:</span> {paymentMethods.find(m => m.id === selectedPaymentMethod)?.name}
               </p>
             </div>
 
@@ -227,9 +239,6 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
                   onChange={(e) => setFormData(prev => ({ ...prev, transactionId: e.target.value }))}
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  bKash/Nagad/Rocket এর জন্য Transaction ID, Bank এর জন্য MFS/Transaction ID
-                </p>
               </div>
 
               <div>
@@ -238,7 +247,10 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
                   id="amountPaid"
                   type="number"
                   value={formData.amountPaid}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amountPaid: parseFloat(e.target.value) }))}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    amountPaid: parseFloat(e.target.value) || 0 
+                  }))}
                   required
                 />
               </div>
@@ -255,7 +267,7 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
               </div>
 
               <div>
-                <Label>প্রমাণ ছবি *</Label>
+                <Label>প্রমাণ ছবি * (সর্বোচ্চ 5 টি)</Label>
                 <ProofUploader
                   files={proofImages}
                   onFilesChange={setProofImages}
@@ -263,7 +275,7 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
                   accept="image/*,.pdf"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Payment Screenshot, Bank Slip, Receipt ইত্যাদির ছবি
+                  Payment Screenshot, Bank Slip, Receipt ইত্যাদির ছবি (প্রতিটি সর্বোচ্চ 5MB)
                 </p>
               </div>
 
@@ -291,7 +303,7 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
                 onClick={() => setStep('review')}
                 className="flex-1"
                 disabled={
-                  !selectedPaymentMethod || // FIXED: Check the separate state
+                  !selectedPaymentMethod ||
                   !formData.transactionId ||
                   !formData.transactionDate ||
                   proofImages.length === 0
@@ -314,7 +326,7 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">পদ্ধতি</p>
-                      <p className="font-semibold">{selectedPaymentMethod}</p>
+                      <p className="font-semibold">{paymentMethods.find(m => m.id === selectedPaymentMethod)?.name}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">পরিমাণ</p>
@@ -334,8 +346,11 @@ export const PaymentSubmissionForm: React.FC<PaymentSubmissionFormProps> = ({
                     <p className="text-sm text-gray-600 mb-2">প্রমাণ ছবি</p>
                     <div className="flex gap-2 flex-wrap">
                       {proofImages.map((file, index) => (
-                        <div key={index} className="border rounded p-2 text-xs">
+                        <div key={index} className="border rounded p-2 text-xs max-w-[150px] truncate">
                           {file.name}
+                          <div className="text-gray-500">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                          </div>
                         </div>
                       ))}
                     </div>

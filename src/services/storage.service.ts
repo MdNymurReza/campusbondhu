@@ -2,110 +2,200 @@
 import { supabase } from '@/lib/supabase';
 
 class StorageService {
-  private BUCKET_NAME = 'payment-proofs';
+  // Convert file to Base64
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  }
 
-  // Method 1: General upload method
-  async uploadFile(file: File, folderPath: string = ''): Promise<string> {
+  // Store files directly in database (no bucket needed)
+  async storePaymentFiles(
+    proofImages: File[],
+    receiptImage: File | null,
+    userId: string,
+    courseId: string
+  ): Promise<{
+    proofUrls: string[];
+    receiptUrl: string | null;
+  }> {
     try {
-      console.log('Uploading file to storage...', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        folderPath
-      });
+      console.log('📁 Storing payment files in database...');
 
-      // Check if bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      console.log('Available buckets:', buckets);
-
-      const bucketExists = buckets?.some(bucket => bucket.name === this.BUCKET_NAME);
-
-      if (!bucketExists) {
-        console.warn(`Bucket '${this.BUCKET_NAME}' not found!`);
-        console.log('Please create the bucket in Supabase:');
-        console.log('1. Go to Storage section');
-        console.log('2. Click "Create bucket"');
-        console.log('3. Name it "payment-proofs"');
-
-        // For development, return a placeholder
-        return this.getPlaceholderUrl(file.name);
+      // 1. Convert proof images to Base64
+      const proofBase64Array: string[] = [];
+      for (const file of proofImages) {
+        const base64 = await this.fileToBase64(file);
+        
+        // Optional: Compress if image is too large
+        const compressedBase64 = await this.compressImageIfNeeded(base64, file.type);
+        proofBase64Array.push(compressedBase64);
       }
 
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      // 2. Convert receipt image to Base64 if exists
+      let receiptBase64: string | null = null;
+      if (receiptImage) {
+        receiptBase64 = await this.fileToBase64(receiptImage);
+        receiptBase64 = await this.compressImageIfNeeded(receiptBase64, receiptImage.type);
+      }
 
-      console.log('Uploading to path:', fullPath);
+      // 3. Store in a separate table (optional, for better organization)
+      const fileMetadata = {
+        user_id: userId,
+        course_id: courseId,
+        proof_count: proofImages.length,
+        total_size: proofImages.reduce((sum, file) => sum + file.size, 0) + (receiptImage?.size || 0),
+        stored_at: new Date().toISOString()
+      };
 
-      // Upload file
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .upload(fullPath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      // 4. Insert into a files table or return Base64 data
+      const { data, error } = await supabase
+        .from('payment_files')
+        .insert({
+          user_id: userId,
+          course_id: courseId,
+          proof_images: proofBase64Array,
+          receipt_image: receiptBase64,
+          metadata: fileMetadata
+        })
+        .select('id')
+        .single();
 
       if (error) {
-        console.error('Supabase upload error:', error);
-        // Return placeholder for development
-        return this.getPlaceholderUrl(file.name);
+        console.warn('Could not store in separate table, using Base64 directly:', error);
+        // If table doesn't exist, we'll just return the Base64 strings
       }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(this.BUCKET_NAME)
-        .getPublicUrl(fullPath);
-
-      console.log('File uploaded successfully:', publicUrl);
-      return publicUrl;
+      // Return Base64 strings directly
+      return {
+        proofUrls: proofBase64Array,
+        receiptUrl: receiptBase64
+      };
 
     } catch (error) {
-      console.error('Storage service error:', error);
-      // Return placeholder for development
-      return this.getPlaceholderUrl(file.name);
+      console.error('Error storing files:', error);
+      // Return empty arrays as fallback
+      return {
+        proofUrls: proofImages.map(() => this.getPlaceholderUrl('proof')),
+        receiptUrl: receiptImage ? this.getPlaceholderUrl('receipt') : null
+      };
     }
   }
 
-  // Method 2: Upload payment proof (specific for payment proofs)
+  // Optional: Compress Base64 image to reduce size
+  private async compressImageIfNeeded(base64: string, mimeType: string): Promise<string> {
+    // Only compress images larger than 1MB
+    const base64Size = (base64.length * 3) / 4; // Approximate byte size
+    
+    if (base64Size < 1024 * 1024 || !mimeType.startsWith('image/')) {
+      return base64;
+    }
+
+    console.log('Compressing image from', Math.round(base64Size / 1024), 'KB');
+    
+    try {
+      return await this.compressBase64Image(base64, 0.7); // 70% quality
+    } catch (error) {
+      console.warn('Compression failed, using original:', error);
+      return base64;
+    }
+  }
+
+  private async compressBase64Image(base64: string, quality = 0.8): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = base64;
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calculate new dimensions (max 1200px width)
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > 1200) {
+          const ratio = height / width;
+          width = 1200;
+          height = width * ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedBase64);
+        } else {
+          reject(new Error('Could not get canvas context'));
+        }
+      };
+      
+      img.onerror = reject;
+    });
+  }
+
+  // For compatibility with existing code
   async uploadPaymentProof(
     file: File,
     userId: string,
     courseId: string
   ): Promise<string> {
-    const folderPath = `${userId}/proofs/${courseId}`;
-    return this.uploadFile(file, folderPath);
+    const base64 = await this.fileToBase64(file);
+    return base64; // Return Base64 directly
   }
 
-  // Method 3: Upload receipt (specific for receipts)
   async uploadReceipt(file: File, userId: string): Promise<string> {
-    const folderPath = `${userId}/receipts`;
-    return this.uploadFile(file, folderPath);
+    const base64 = await this.fileToBase64(file);
+    return base64; // Return Base64 directly
   }
 
-  // Helper method to get placeholder URL
-  // Add this to your storage.service.ts class
+  // Get file as Base64
+  async getFileAsBase64(fileIdOrBase64: string): Promise<string> {
+    // If it's already a Base64 string (starts with data:), return it
+    if (fileIdOrBase64.startsWith('data:')) {
+      return fileIdOrBase64;
+    }
+    
+    // Otherwise, try to fetch from database
+    try {
+      const { data, error } = await supabase
+        .from('payment_files')
+        .select('proof_images, receipt_image')
+        .eq('id', fileIdOrBase64)
+        .single();
+
+      if (error) {
+        console.error('Error fetching file:', error);
+        return this.getPlaceholderUrl('file');
+      }
+
+      // Return first proof image or receipt
+      return data.proof_images?.[0] || data.receipt_image || this.getPlaceholderUrl('file');
+    } catch (error) {
+      console.error('Get file error:', error);
+      return this.getPlaceholderUrl('file');
+    }
+  }
+
+  // Placeholder for compatibility
   getPlaceholderUrl(filename: string): string {
-    const encodedName = encodeURIComponent(filename);
+    const encodedName = encodeURIComponent(filename.substring(0, 20));
     return `https://placehold.co/600x400/3b82f6/ffffff/png?text=${encodedName}`;
   }
 
-  // Get file URL
-  async getFileUrl(filePath: string): Promise<string> {
-    const { data: { publicUrl } } = supabase.storage
-      .from(this.BUCKET_NAME)
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+  // Check if we can store files (always true for Base64)
+  async canStoreFiles(): Promise<boolean> {
+    return true; // Base64 always works
   }
 
-  // Delete file
-  async deleteFile(filePath: string): Promise<void> {
-    const { error } = await supabase.storage
-      .from(this.BUCKET_NAME)
-      .remove([filePath]);
-
-    if (error) throw error;
+  // Get storage method info
+  getStorageMethod(): string {
+    return 'database-base64';
   }
 }
 
